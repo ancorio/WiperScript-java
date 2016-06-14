@@ -2,10 +2,12 @@ package by.igorshavlovsky.wpsc.exec;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import by.igorshavlovsky.wpsc.lib.std.I2FMethod;
 import by.igorshavlovsky.wpsc.lib.std.I2StrMethod;
 import by.igorshavlovsky.wpsc.lib.std.IfMethod;
+import by.igorshavlovsky.wpsc.lib.std.MethodDefineMethod;
 import by.igorshavlovsky.wpsc.lib.std.RoundMethod;
 import by.igorshavlovsky.wpsc.lib.std.Str2IMethod;
 import by.igorshavlovsky.wpsc.lib.std.TruncMethod;
@@ -52,6 +54,7 @@ public class Run extends MethodContainer {
 		loadMethod(new Str2IMethod());
 		loadMethod(new I2FMethod());
 		loadMethod(new IfMethod());
+		loadMethod(new MethodDefineMethod());
 	}
 	
 	
@@ -65,7 +68,13 @@ public class Run extends MethodContainer {
 		super();
 		
 		loadStdLib();
+		test("123;2342;");
 
+		test("method(\"b2s\"," +
+			 "	if(param(0), ÒTRUEÓ, ÒFALSEÓ);" +
+			 ");" + 
+			 "b2s(2=1);");
+		
 		test("if (round(3*2.4)=8,\n\t\"yes\",\n\t\"no\")");
 		test("if (round(3*2.4)=7, \"yes\", \"no\")");
 		test("if (round(3*2.5)=8, \"yes\", \"no\")");
@@ -140,6 +149,10 @@ public class Run extends MethodContainer {
 			builder.append(ord++).append(": ").append(call.getMethod().getName());
 		}
 		return builder.toString();
+	}
+
+	public List<Call> getStack() {
+		return stack;
 	}
 	
 }

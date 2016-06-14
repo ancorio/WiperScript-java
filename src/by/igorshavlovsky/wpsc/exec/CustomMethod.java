@@ -283,6 +283,7 @@ public class CustomMethod extends Method {
 						result = lastVar;
 					}
 					result = lastVar;
+					lastVar = null;
 					i++;
 					break;
 				}

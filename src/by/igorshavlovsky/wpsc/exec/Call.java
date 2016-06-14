@@ -98,7 +98,6 @@ public class Call extends MethodContainer {
 		}
 	}
 	
-	
 	public int getParamsCount() {
 		parseParamsList();
 		return paramsList.size();
@@ -124,6 +123,11 @@ public class Call extends MethodContainer {
 		} else {
 			throw new RunException("Method " + method.getName() + " is called with " + getParamsCount() + " params, but asks for " + index);
 		}
+	}
+
+	public MethodContainer root() {
+		
+		return run.getStack().get(0);
 	}
 
 }
