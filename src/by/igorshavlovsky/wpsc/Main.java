@@ -7,7 +7,12 @@ import by.igorshavlovsky.wpsc.exec.Script;
 public class Main {
 
 	public static void main(String[] args) {
-		Run env = new Run();
+		try {
+			Run env = new Run();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
 		
 	}
 

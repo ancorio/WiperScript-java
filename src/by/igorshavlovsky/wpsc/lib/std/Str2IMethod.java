@@ -13,11 +13,10 @@ public class Str2IMethod extends Method {
 	
 	@Override
 	public Var call(Call call) {
-		call.runAllParams();
 		if (call.getParamsCount() != 1) {
 			invalidParamsCount(call.getParamsCount());
 		}
-		Var var = call.getParamResult(0);
+		Var var = call.getParam(0);
 		if (var.getVarType() == VarType.STRING) {
 			return var.convertTo(VarType.INTEGER);
 		}

@@ -1,7 +1,9 @@
 package by.igorshavlovsky.wpsc.exec;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
 
 public class MethodContainer {
 	
@@ -13,6 +15,16 @@ public class MethodContainer {
 
 	public void setMethods(Map<String, Method> methods) {
 		this.methods = methods;
+	}
+	
+	public void loadMethod(Method method) {
+		getMethods().put(method.getName(), method);
+	}
+	
+	public void loadMethods(List <Method> methods) {
+		for (Method method : methods) {
+			getMethods().put(method.getName(), method);
+		}
 	}
 
 }

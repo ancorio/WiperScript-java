@@ -1,6 +1,9 @@
 package by.igorshavlovsky.wpsc.exec;
 
-import sun.org.mozilla.javascript.internal.ast.ForInLoop;
+import java.util.ArrayList;
+import java.util.List;
+
+import by.igorshavlovsky.wpsc.var.BlockVar;
 import by.igorshavlovsky.wpsc.var.FloatVar;
 import by.igorshavlovsky.wpsc.var.IntegerVar;
 import by.igorshavlovsky.wpsc.var.NullVar;
@@ -15,18 +18,24 @@ public class CustomMethod extends Method {
 	public CustomMethod(String name, String roughtScript) {
 		super(name);
 		this.roughtScript = roughtScript;
+		this.script = Preprocessor.prepare(roughtScript, true);
+	}
+	public CustomMethod(String name, Script script) {
+		super(name);
+		roughtScript = script.getScript();
+		this.script = script;
 	}
 	
+
 	private Script script;
 	private int i = 0;
 
 	@Override
 	public Var call(Call call) {
-		super.call(call);
 		//System.out.println("Calling method " + getName() + " from stack:\n" + call.getRun().getStackTrace());
-		script = Preprocessor.prepare(roughtScript, true);
+		
 		//System.out.println(script);
-		if (script.getExecutable().length() == 0) {
+		if (script.getLength() == 0) {
 			return new NullVar();
 		}
 		run(call);
@@ -37,12 +46,11 @@ public class CustomMethod extends Method {
 	}
 	
 	private void printIssue(String text) {
-		System.err.println(script.getExecutable());
-		for(int k = 0; k < i; k++) {
+		System.err.println(script.getScript());
+		for(int k = script.getStart(); k < i; k++) {
 			System.err.print(' ');
 		}
 		System.err.println('^');
-		System.err.println(text);
 		throw new RunException(text);
 	}
 	
@@ -56,12 +64,11 @@ public class CustomMethod extends Method {
 	private String nextString() {
 		StringBuilder result = new StringBuilder();
 		i++;
-		String s = script.getExecutable();
+		String sourceString = script.getSource();
 		boolean escape = false;
-		boolean inString = true;
-		int l = s.length();
-		for (; i < l; i++) {
-			char c = s.charAt(i);
+		int lastIndex = script.getLastIndex();
+		for (; i < lastIndex; i++) {
+			char c = sourceString.charAt(i);
 			switch (c) {
 			case '"':
 				if (escape) {
@@ -112,14 +119,44 @@ public class CustomMethod extends Method {
 		return null;
 	}
 	
+	private Var nextBlock() {
+		StringBuilder result = new StringBuilder();
+		i++;
+		int bracketLevel = 0;
+		String sourceString = script.getSource();
+		int lastIndex = script.getLastIndex();
+		int start = i;
+		while (i < lastIndex) {
+			char c = sourceString.charAt(i);
+			switch (c) {
+			case '{':
+				if (!script.isInString(i)) {
+					bracketLevel++;
+				}
+				break;
+			case '}':
+				if (!script.isInString(i)) {
+					bracketLevel--;
+				}
+				break;
+			}
+			i++;
+			if (bracketLevel < 0) {
+				return new BlockVar(sourceString.substring(start, i - 1));
+			}
+		}
+		printIssue("Block is not finished");
+		return null;
+	}
+	
 	private Var nextDecimal() {
 		StringBuilder builder = new StringBuilder(8);
-		String s = script.getExecutable();
-		int l = s.length();
+		String sourceString = script.getSource();
+		int lastIndex = script.getLastIndex();
 		boolean gotDot = false;
 		boolean needMore = true;
-		while (i < s.length()) { 
-			char c = s.charAt(i++);
+		while (i < lastIndex) { 
+			char c = sourceString.charAt(i++);
 			switch (c) {
 				case '0':
 				case '1':
@@ -159,11 +196,10 @@ public class CustomMethod extends Method {
 	}
 	
 	private String methodName() {
-		StringBuilder result = new StringBuilder(16);
-		String s = script.getExecutable();
-		int l = s.length();
-		while (i < s.length()) {
-			char c = s.charAt(i++);
+		String sourceString = script.getSource();
+		int lastIndex = script.getLastIndex();
+		while (i < lastIndex) {
+			char c = sourceString.charAt(i++);
 			switch (c) {
 				case '0':
 				case '1':
@@ -202,48 +238,106 @@ public class CustomMethod extends Method {
 				case 'y': 
 				case 'z':
 				case '_': {
-					result.append(c);
 					break;
 				}
 				case '(': {
 					return result.toString();
+				}
+				default: {
+					printIssue("Invalid symbol in method name: " + c);
 				}
 			}
 		}
 		printIssue("Cannot find params list for method");
 		return null;
 	}
-	private String methodParams() {
+	private Script methodParams() {
 		int start = i;
-		String s = script.getExecutable();
-		int l = s.length();
+		String sourceScring = script.getSource();
+		int lastIndex = script.getLastIndex();
 		int bracketLvl = 0;
-		while (i < l) {
-			char c = s.charAt(i);
-			if (c == '('  && !script.getStringIndexes().contains(Integer.valueOf(i))) {
+		while (i < lastIndex) {
+			char c = sourceScring.charAt(i);
+			if (c == '('  && !script.isInString(i)) {
 				bracketLvl++;
 			}
-			if (c == ')'  && !script.getStringIndexes().contains(Integer.valueOf(i))) {
+			if (c == ')'  && !script.isInString(i)) {
 				bracketLvl--;
 			}
 			i++;
 			if (bracketLvl < 0) {
-				return s.substring(start, i - 1);
+				return new SubScript(script, start, i - 1 - start);
 			}
 		}
 		printIssue("Cannot find method's params list finishing ')'");
 		return null;
+	} 
+	private Script nextBracket() {
+		int start = i;
+		String sourceScring = script.getSource();
+		int lastIndex = script.getLastIndex();
+		int bracketLvl = 0;
+		while (i < lastIndex) {
+			char c = sourceScring.charAt(i);
+			if (c == '('  && !script.isInString(i)) {
+				bracketLvl++;
+			}
+			if (c == ')'  && !script.isInString(i)) {
+				bracketLvl--;
+			}
+			i++;
+			if (bracketLvl < 0) {
+				return new SubScript(script, start, i - 1 - start);
+			}
+		}
+		printIssue("Cannot find list finishing ')'");
+		return null;
+	} 
+	
+	private List <Var> paramVars(Script paramsScript, Call call) {
+		List <Var> result = new ArrayList<>();
+		String sourceString = paramsScript.getSource();
+		int startIndex = paramsScript.getStart();
+		int lastIndex = paramsScript.getLastIndex();
+		int paramOrd = 0;
+		int bracketLvl = 0;
+		for (int i = startIndex; i < lastIndex; i++) {
+			char c = sourceString.charAt(i);
+			if (c == '('  && !paramsScript.isInString(i)) {
+				bracketLvl++;
+			}
+			if (c == ')'  && !paramsScript.isInString(i)) {
+				bracketLvl--;
+			}
+			if (bracketLvl == 0 && sourceString.charAt(i) == ',' && !paramsScript.isInString(i)) {
+				Script s = new SubScript(paramsScript, startIndex, i - startIndex);
+				result.add(call.executeBlock("@" + call.getMethod().getName() + "'s param #" + result.size(), s));
+				startIndex = i + 1;
+			}
+		}
+		if (paramsScript.getLastIndex() > 0) {
+			Script s = new SubScript(paramsScript, startIndex, lastIndex - startIndex);
+			result.add(call.executeBlock("@" + call.getMethod().getName() + "'s param #" + result.size(), s));
+		}
+		return result;
 	}
 
 	private Var executeMethod(Call call) {
 		String methodName = methodName();
-		String params = methodParams();
+		Script params = methodParams();
+		List <Var> paramVars = paramVars(params, call);
 		Method method = call.getRun().getMethodByName(methodName);
-		Var result = call.getRun().call(method, params);
+		
+		Var result = call.getRun().call(method, paramVars, call);
+		
 		//System.out.println(methodName + " " + params);
 		return result;
 	}
 	
+	@Override
+	public String toString() {
+		return getName() + ": " + Preprocessor.prepare(roughtScript, true).getScript();
+	}
 	
 	private Operator operator = null;
 	private Var leftVar = null;
@@ -251,15 +345,25 @@ public class CustomMethod extends Method {
 	private Var lastVar = null;
 	
 	private void run(Call call) {
-		//System.out.println("Running script: " + roughtScript);
-		String s = script.getExecutable();
-		int l = s.length();
-		while (i < l) {
-			char c = script.getExecutable().charAt(i);
+		i = script.getStart();
+		System.out.println("Running script: " + script.getScript());
+
+		
+		String sourceString = script.getSource();
+		int lastIndex = script.getLastIndex();
+		while (i < lastIndex) {
+			char c = sourceString.charAt(i);
 			switch (c) {
 				case '"': {
 					needSeparator();
 					lastVar = new StringVar(nextString());
+					mergeOperator();
+					break;
+				}
+				case '{': {
+					needSeparator();
+					lastVar = nextBlock();
+					mergeOperator();
 					break;
 				}
 				case '0':
@@ -329,6 +433,16 @@ public class CustomMethod extends Method {
 					mergeOperator();
 					break;
 				}
+				case '(':
+					needSeparator();
+					i++;
+					Script script = nextBracket();
+					lastVar = call.executeBlock("()", script);
+					mergeOperator();
+					break;
+				default:
+					printIssue("Invalid operation");
+					break;
 			
 			}
 		}
@@ -338,19 +452,21 @@ public class CustomMethod extends Method {
 		if (result == null) {
 			result = new NullVar();
 		}
+
+		//System.out.println("Script: " + script.getScript() + " Result:" + result + "\t\t\t" + call);
 	}
 
 	private void detectOperator() {
-		String s = script.getExecutable();
-		int l = s.length();
-		if (i == l - 1) {
+		String sourceString = script.getSource();
+		int lastIndex = script.getLastIndex();
+		if (i >= lastIndex - 1) {
 			printIssue("Operator at the end of the script");
 		}
 		mergeOperator();
 		leftVar = lastVar;
 		lastVar = null;
 		
-		String str = s.substring(i, i + 2);
+		String str = sourceString.substring(i, i + 2);
 
 		for (Operator op : Operator.values()) {
 			if (op.detect(str)) {

@@ -12,16 +12,19 @@ public class Call extends MethodContainer {
 	private Run run;
 	
 	private Method method;
+
+	private List <Var> paramsList;
 	
-	private String params;
+	private Call parentCall;
 	
 	private Map<String, Var> vars = new HashMap<String, Var>(8);
-
-	public Call(Run run, Method method, String params) {
+	
+	public Call(Run run, Method method, List <Var> paramsList, Call parentCall) {
 		super();
 		this.run = run;
 		this.method = method;
-		this.params = params;
+		this.paramsList = paramsList;
+		this.parentCall = parentCall;
 	}
 
 	public Run getRun() {
@@ -40,14 +43,6 @@ public class Call extends MethodContainer {
 		this.method = method;
 	}
 
-	public String getParams() {
-		return params;
-	}
-
-	public void setParams(String params) {
-		this.params = params;
-	}
-
 	public Map<String, Var> getVars() {
 		return vars;
 	}
@@ -60,68 +55,16 @@ public class Call extends MethodContainer {
 		return method.call(this);
 	}
 	
-	private List <Param> paramsList = null;
-	
-	public void parseParamsList() {
-		if (paramsList != null) {
-			return;
-		}
-		paramsList = new ArrayList<Param>(4);
-		Script paramsScript = Preprocessor.prepare(params, false);
-		String source = paramsScript.getExecutable();
-		int start = 0;
-		int l = source.length();
-		int paramOrd = 0;
-		int bracketLvl = 0;
-		for (int i = 0; i < l; i++) {
-			char c = source.charAt(i);
-			if (c == '('  && !paramsScript.getStringIndexes().contains(Integer.valueOf(i))) {
-				bracketLvl++;
-			}
-			if (c == ')'  && !paramsScript.getStringIndexes().contains(Integer.valueOf(i))) {
-				bracketLvl--;
-			}
-			if (bracketLvl == 0 && source.charAt(i) == ',' && !paramsScript.getStringIndexes().contains(Integer.valueOf(i))) {
-				paramsList.add(new Param(paramOrd++, this, source.substring(start, i)));
-				start = i + 1;
-			}
-		}
-		if (start + 1 < l) {
-			paramsList.add(new Param(paramOrd++, this, source.substring(start, l)));
-		}
-	}
-	
-	public void runAllParams() {
-		parseParamsList();
-		for (Param p : paramsList) {
-			p.getResult();
-		}
-	}
 	
 	public int getParamsCount() {
-		parseParamsList();
 		return paramsList.size();
 	}
 	
-	public String getOriginalContent() {
-		return params;
-	}
-	
-	public String getParamContent(int index) {
-		parseParamsList();
+	public Var getParam(int index) {
 		if (index < getParamsCount()) {
-			return paramsList.get(index).getContent();
+			return paramsList.get(index);
 		} else {
-			throw new RunException("Method " + method.getName() + " is called with " + getParamsCount() + " params, but asks for " + index);
-		}
-	}
-	
-	public Var getParamResult(int index) {
-		parseParamsList();
-		if (index < getParamsCount()) {
-			return paramsList.get(index).getResult();
-		} else {
-			throw new RunException("Method " + method.getName() + " is called with " + getParamsCount() + " params, but asks for " + index);
+			throw new RunException("Method " + method + " is called with " + getParamsCount() + " params, but asks for " + index);
 		}
 	}
 
@@ -130,4 +73,29 @@ public class Call extends MethodContainer {
 		return run.getStack().get(0);
 	}
 
+	public String toString() {
+		return "Call: " + method.getName() + " Params: " + paramsList;
+	}
+
+	public Call getRootCall() {
+		return null;
+	}
+
+	public Var executeBlock(String name, Script block) {
+		return run.call(new CustomMethod(name, block), paramsList, parentCall == null ? this : parentCall);
+	}
+
+	public List<Var> getParamsList() {
+		return paramsList;
+	}
+
+	public Call getParentCall() {
+		return parentCall;
+	}
+
+	public void setParentCall(Call parentCall) {
+		this.parentCall = parentCall;
+	}
+	
+	
 }

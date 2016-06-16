@@ -19,13 +19,14 @@ abstract public class Method {
 		throw new RunException("Invalid param (" + i + ") type: " + var + " for method: " + name);
 	}
 	
-	public Var call(Call call) {
-		call.runAllParams();
-		return null;
-	}
+	abstract public Var call(Call call);
 
 	public String getName() {
 		return name;
+	}
+
+	public String toString() {
+		return getName();
 	}
 	
 }

@@ -8,17 +8,13 @@ public class Param {
 
 	private Call call;
 	
-	private String content;
-	
 	private Var result = null;
 	
-	
-	
-	public Param(int ordinal, Call call, String content) {
+	public Param(int ordinal, Call call, Var result) {
 		super();
 		this.ordinal = ordinal;
 		this.call = call;
-		this.content = content;
+		this.result = result;
 	}
 
 	public int getOrdinal() {
@@ -36,20 +32,13 @@ public class Param {
 	public void setCall(Call call) {
 		this.call = call;
 	}
-
-	public String getContent() {
-		return content;
-	}
-
-	public void setContent(String content) {
-		this.content = content;
+	
+	public String toString() {
+		return result.getDetails();
 	}
 
 	public Var getResult() {
-		if (result != null) {
-			return result;
-		}
-		result = call.getRun().call(new CustomMethod("Param #" + ordinal + " for (" + call.getMethod().getName() + ")", content), ""); 
 		return result;
 	}
 }
+

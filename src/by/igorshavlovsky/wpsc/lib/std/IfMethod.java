@@ -2,6 +2,7 @@ package by.igorshavlovsky.wpsc.lib.std;
 
 import by.igorshavlovsky.wpsc.exec.Call;
 import by.igorshavlovsky.wpsc.exec.Method;
+import by.igorshavlovsky.wpsc.exec.Script;
 import by.igorshavlovsky.wpsc.var.Var;
 import by.igorshavlovsky.wpsc.var.VarType;
 
@@ -16,16 +17,23 @@ public class IfMethod extends Method {
 		if (call.getParamsCount() != 3) {
 			invalidParamsCount(call.getParamsCount());
 		}
-		Var var = call.getParamResult(0);
-		if (var.getVarType() == VarType.BOOLEAN) {
-			if (((Boolean)var.getValue()).booleanValue()) {
-				return call.getParamResult(1);
-			} else {
-				return call.getParamResult(2);
-			}
+		Var var = call.getParam(0);
+		Var thenBlock = call.getParam(1);
+		Var elseBlock = call.getParam(2);
+		if (var.getVarType() != VarType.BOOLEAN) {
+			invalidParamType(0, var);
 		}
-		invalidParamType(0, var);
-		return null;
+		if (thenBlock.getVarType() != VarType.BLOCK) {
+			invalidParamType(1, thenBlock);
+		}
+		if (elseBlock.getVarType() != VarType.BLOCK) {
+			invalidParamType(2, elseBlock);
+		}
+		if (((Boolean)var.getValue()).booleanValue()) {
+			return call.executeBlock("@then", (Script)thenBlock.getValue());
+		} else {
+			return call.executeBlock("@else", (Script)elseBlock.getValue());
+		}
 	}
 
 }

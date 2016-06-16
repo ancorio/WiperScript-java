@@ -8,6 +8,7 @@ import by.igorshavlovsky.wpsc.lib.std.I2FMethod;
 import by.igorshavlovsky.wpsc.lib.std.I2StrMethod;
 import by.igorshavlovsky.wpsc.lib.std.IfMethod;
 import by.igorshavlovsky.wpsc.lib.std.MethodDefineMethod;
+import by.igorshavlovsky.wpsc.lib.std.ParamMethod;
 import by.igorshavlovsky.wpsc.lib.std.RoundMethod;
 import by.igorshavlovsky.wpsc.lib.std.Str2IMethod;
 import by.igorshavlovsky.wpsc.lib.std.TruncMethod;
@@ -42,10 +43,6 @@ public class Run extends MethodContainer {
 	//str_len()
 	//{
 	//}
-
-	private void loadMethod(Method method) {
-		getMethods().put(method.getName(), method);
-	}
 	
 	private void loadStdLib() {
 		loadMethod(new I2StrMethod());
@@ -55,37 +52,46 @@ public class Run extends MethodContainer {
 		loadMethod(new I2FMethod());
 		loadMethod(new IfMethod());
 		loadMethod(new MethodDefineMethod());
+		loadMethod(new ParamMethod());
 	}
 	
 	
 	private void test(String script) {
-		stack.add(new Call(this, new CustomMethod("test", script), ""));
-		System.out.println(script + ": " + call());
-		stack.clear();
+		System.out.println(call(new CustomMethod("Main", script), new ArrayList<Var>(), null));
 	}
 
 	public Run() {
 		super();
 		
 		loadStdLib();
+		
+
+		test("5+6*10");
+		test("5+(6*10)");
+		
+		test("method(\"show\",{" +
+				 "	param(0);" +
+				 "});" + 
+		     "method(\"show_more\",{" +
+				 "	show(\"X\"+ show(\"R\") + param(0));" +
+				 "});" + 
+				 "show_more(\"show me\");");
+		
+		/*
+		
 		test("123;2342;");
 
 		test("method(\"b2s\"," +
-			 "	if(param(0), ÒTRUEÓ, ÒFALSEÓ);" +
-			 ");" + 
-			 "b2s(2=1);");
+				 "	if(param(0), \"TRUE\", \"FALSE\");" +
+				 ");" + 
+				 "b2s(2=1);");
 		
-		test("if (round(3*2.4)=8,\n\t\"yes\",\n\t\"no\")");
-		test("if (round(3*2.4)=7, \"yes\", \"no\")");
-		test("if (round(3*2.5)=8, \"yes\", \"no\")");
-		test("if (round(3*2.5)=7, \"yes\", \"no\")");
-		test("if (trunc(3*2.4)=8, \"yes\", \"no\")");
-		test("if (trunc(3*2.4)=7, \"yes\", \"no\")");
-		test("if (trunc(3*2.5)=8, \"yes\", \"no\")");
-		test("if (trunc(3*2.5)=7, \"yes\", \"no\")");
-
-		test("2345/23 * 5 + 4");
-
+		test("method(\"b2s\"," +
+				 "	if(param(0), \"TRUE\", \"FALSE\");" +
+				 ");" + 
+				 "b2s(1=1);");
+				 
+				 */
 		test("2345/23");
 		test("5=6");
 		test("7=7");
@@ -102,7 +108,20 @@ public class Run extends MethodContainer {
 		test("20 > 200");
 		test("20 < 200");
 		test("20 != 200");
-		test("i2f(str2i(i2str(round(4.5) + trunc(4.5) + str2i(\"100\"))))");
+
+		test("if (1=2, {\"OK\"}, {\"Bad\"})");
+		
+		test("if (round(3*2.4)=7, {\"yes\"}, {\"no\"})");
+		test("if (round(3*2.5)=8, \"yes\", \"no\")");
+		test("if (round(3*2.5)=7, \"yes\", \"no\")");
+		test("if (trunc(3*2.4)=8, \"yes\", \"no\")");
+		test("if (trunc(3*2.4)=7, \"yes\", \"no\")");
+		test("if (trunc(3*2.5)=8, \"yes\", \"no\")");
+		test("if (trunc(3*2.5)=7, \"yes\", \"no\")");
+
+		test("2345/23 * 5 + 4");
+
+				test("i2f(str2i(i2str(round(4.5) + trunc(4.5) + str2i(\"100\"))))");
 		test("111+222");
 		test("\"Hello!\\\" Voktor!\"");
 		test("1234567890123");
@@ -128,14 +147,25 @@ public class Run extends MethodContainer {
 		throw new RunException("Cannot find method " + methodName);
 	}
 	
-	protected Var call() {
+	public Var call() {
 		return stack.get(stack.size() - 1).call();
 	}
 	
-	public Var call(Method method, String params) {
-		stack.add(new Call(this, method, params));
-		Var result = call();
+	public Call push(Method method, List <Var> params, Call parentCall) {
+		Call call = new Call(this, method, params, parentCall);
+		stack.add(call);
+		return call;
+	}
+	
+	public void pop() {
 		stack.remove(stack.size() - 1);
+	}
+
+	
+	public Var call(Method method, List <Var> params, Call parentCall) {
+		push(method, params, parentCall);
+		Var result = call();
+		pop();
 		return result;
 	}
 
@@ -146,7 +176,10 @@ public class Run extends MethodContainer {
 		StringBuilder builder = new StringBuilder();
 		int ord = 0;
 		for (Call call : stack) {
-			builder.append(ord++).append(": ").append(call.getMethod().getName());
+			if (ord > 0) {
+				builder.append('\n');
+			}
+			builder.append(ord++).append(": ").append(call.getMethod().getName()).append("<-").append(call.getParamsList());
 		}
 		return builder.toString();
 	}
@@ -155,4 +188,8 @@ public class Run extends MethodContainer {
 		return stack;
 	}
 	
+	@Override
+	public String toString() {
+		return getStackTrace();
+	}
 }

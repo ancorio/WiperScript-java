@@ -5,34 +5,54 @@ import java.util.Set;
 
 public class Script {
 	
-	private Set <Integer> stringIndexes;
+	protected Set <Integer> stringIndexes;
 	
-	private String executable;
+	protected String executable;
 
-	public Script(Set<Integer> stringIndexes, String executable) {
+	public Script(String executable, Set<Integer> stringIndexes) {
 		super();
 		this.stringIndexes = stringIndexes;
 		this.executable = executable;
 	}
 
 	public String toString() {
-		return "EXEC: " + executable;
+		return "EXEC: " + getScript();
 	}
 
-	public Set<Integer> getStringIndexes() {
-		return stringIndexes;
+	protected int convertedIndex(int index) {
+		return index;
 	}
 
-	public void setStringIndexes(Set<Integer> stringIndexes) {
-		this.stringIndexes = stringIndexes;
+	protected int convertedLength() {
+		return executable.length();
 	}
 
-	public String getExecutable() {
+	protected int convertedStart() {
+		return 0;
+	}
+	
+	public boolean isInString(int index) {
+		return stringIndexes.contains(Integer.valueOf(convertedIndex(index)));
+	}
+
+	public int getLength() {
+		return convertedLength();
+	}
+
+	public int getLastIndex() {
+		return getStart() + getLength();
+	}
+
+	public String getSource() {
 		return executable;
 	}
 
-	public void setExecutable(String executable) {
-		this.executable = executable;
+	public String getScript() {
+		return executable.substring(getStart(), getLastIndex());
+	}
+
+	public final int getStart() {
+		return convertedStart();
 	}
 	
 }

@@ -70,7 +70,7 @@ public class Preprocessor {
 		if (isScript && (result.length() == 0 || (result.charAt(result.length() - 1) != ';'))) {
 			result.append(';');
 		}
-		return new Script(strings, result.toString());
+		return new Script(result.toString(), strings);
 	}
 
 }
