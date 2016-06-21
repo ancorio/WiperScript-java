@@ -8,11 +8,7 @@ public class BlockVar extends Var<BlockVar, Script> {
 	private Script value;
 
 	public BlockVar(String value) {
-		this(null, value);
-	}
-	
-	public BlockVar(String name, String value) {
-		super(name);
+		super();
 		this.value = Preprocessor.prepare(value, true);
 	}
 

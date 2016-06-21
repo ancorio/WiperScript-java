@@ -6,6 +6,7 @@ public enum VarType {
 	INTEGER,
 	FLOAT,
 	STRING,
-	BLOCK
+	BLOCK,
+	PTR
 	//FORMATTED_STRING
 }

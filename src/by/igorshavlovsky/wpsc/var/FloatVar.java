@@ -5,11 +5,7 @@ public class FloatVar extends Var<FloatVar, Double> {
 	private double value;
 
 	public FloatVar(double value) {
-		this(null, value);
-	}
-	
-	public FloatVar(String name, double value) {
-		super(name);
+		super();
 		this.value = value;
 	}
 

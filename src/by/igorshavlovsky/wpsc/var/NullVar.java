@@ -3,11 +3,7 @@ package by.igorshavlovsky.wpsc.var;
 public class NullVar extends Var<NullVar, Object> {
 	
 	public NullVar() {
-		this(null);
-	}
-	
-	public NullVar(String name) {
-		super(name);
+		super();
 	}
 
 	@Override

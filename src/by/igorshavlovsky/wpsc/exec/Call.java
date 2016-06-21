@@ -7,7 +7,7 @@ import java.util.Map;
 
 import by.igorshavlovsky.wpsc.var.Var;
 
-public class Call extends MethodContainer {
+public class Call extends StackEntry {
 	
 	private Run run;
 	
@@ -17,14 +17,13 @@ public class Call extends MethodContainer {
 	
 	private Call parentCall;
 	
-	private Map<String, Var> vars = new HashMap<String, Var>(8);
-	
-	public Call(Run run, Method method, List <Var> paramsList, Call parentCall) {
+	public Call(Run run, Method method, List <Var> paramsList, Call parentCall, VarsScope varsScope) {
 		super();
 		this.run = run;
 		this.method = method;
 		this.paramsList = paramsList;
 		this.parentCall = parentCall;
+		this.varsScope = varsScope;
 	}
 
 	public Run getRun() {
@@ -41,14 +40,6 @@ public class Call extends MethodContainer {
 
 	public void setMethod(Method method) {
 		this.method = method;
-	}
-
-	public Map<String, Var> getVars() {
-		return vars;
-	}
-
-	public void setVars(Map<String, Var> vars) {
-		this.vars = vars;
 	}
 
 	public Var call() {
@@ -68,7 +59,7 @@ public class Call extends MethodContainer {
 		}
 	}
 
-	public MethodContainer root() {
+	public StackEntry root() {
 		
 		return run.getStack().get(0);
 	}
@@ -81,8 +72,13 @@ public class Call extends MethodContainer {
 		return null;
 	}
 
-	public Var executeBlock(String name, Script block) {
-		return run.call(new CustomMethod(name, block), paramsList, parentCall == null ? this : parentCall);
+	public Var executeBlock(String name, Script block, boolean fromParent) {
+		if (fromParent && parentCall != null) {
+			return run.call(new CustomMethod(name, block), parentCall.getParamsList(), parentCall.getParentCall(), false);
+		} else {
+			return run.call(new CustomMethod(name, block), paramsList, parentCall == null ? this : parentCall, false);			
+		}
+		
 	}
 
 	public List<Var> getParamsList() {
@@ -95,6 +91,20 @@ public class Call extends MethodContainer {
 
 	public void setParentCall(Call parentCall) {
 		this.parentCall = parentCall;
+	}
+	
+	public StackEntry getVarProvider() {
+		if (parentCall == null) {
+			return this;
+		} else {
+			return parentCall;
+		}
+	}
+	
+	private VarsScope varsScope;
+
+	public VarsScope getVarsScope() {
+		return varsScope;
 	}
 	
 	

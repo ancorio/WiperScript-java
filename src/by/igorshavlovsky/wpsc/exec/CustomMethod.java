@@ -9,6 +9,7 @@ import by.igorshavlovsky.wpsc.var.IntegerVar;
 import by.igorshavlovsky.wpsc.var.NullVar;
 import by.igorshavlovsky.wpsc.var.StringVar;
 import by.igorshavlovsky.wpsc.var.Var;
+import by.igorshavlovsky.wpsc.var.PtrVar;
 import by.igorshavlovsky.wpsc.var.VarType;
 
 public class CustomMethod extends Method {
@@ -198,6 +199,7 @@ public class CustomMethod extends Method {
 	private String methodName() {
 		String sourceString = script.getSource();
 		int lastIndex = script.getLastIndex();
+		int startIndex = i;
 		while (i < lastIndex) {
 			char c = sourceString.charAt(i++);
 			switch (c) {
@@ -241,7 +243,7 @@ public class CustomMethod extends Method {
 					break;
 				}
 				case '(': {
-					return result.toString();
+					return sourceString.substring(startIndex, i - 1);
 				}
 				default: {
 					printIssue("Invalid symbol in method name: " + c);
@@ -256,16 +258,37 @@ public class CustomMethod extends Method {
 		String sourceScring = script.getSource();
 		int lastIndex = script.getLastIndex();
 		int bracketLvl = 0;
+		int subLvl = 0;
 		while (i < lastIndex) {
 			char c = sourceScring.charAt(i);
-			if (c == '('  && !script.isInString(i)) {
-				bracketLvl++;
-			}
-			if (c == ')'  && !script.isInString(i)) {
-				bracketLvl--;
+			switch (c) {
+				case '{': {
+					if (!script.isInString(i)) {
+						subLvl++;
+					}
+					break;
+				}
+				case '}': {
+					if (!script.isInString(i)) {
+						subLvl--;
+					}
+					break;
+				}
+				case '(': {
+					if (!script.isInString(i) && subLvl == 0) {
+						bracketLvl++;
+					}
+					break;
+				}
+				case ')': {
+					if (!script.isInString(i) && subLvl == 0) {
+						bracketLvl--;
+					}
+					break;
+				}
 			}
 			i++;
-			if (bracketLvl < 0) {
+			if (bracketLvl < 0 && subLvl == 0) {
 				return new SubScript(script, start, i - 1 - start);
 			}
 		}
@@ -311,13 +334,13 @@ public class CustomMethod extends Method {
 			}
 			if (bracketLvl == 0 && sourceString.charAt(i) == ',' && !paramsScript.isInString(i)) {
 				Script s = new SubScript(paramsScript, startIndex, i - startIndex);
-				result.add(call.executeBlock("@" + call.getMethod().getName() + "'s param #" + result.size(), s));
+				result.add(call.executeBlock("@" + call.getMethod().getName() + "'s param #" + result.size(), s, false));
 				startIndex = i + 1;
 			}
 		}
 		if (paramsScript.getLastIndex() > 0) {
 			Script s = new SubScript(paramsScript, startIndex, lastIndex - startIndex);
-			result.add(call.executeBlock("@" + call.getMethod().getName() + "'s param #" + result.size(), s));
+			result.add(call.executeBlock("@" + call.getMethod().getName() + "'s param #" + result.size(), s, false));
 		}
 		return result;
 	}
@@ -328,7 +351,7 @@ public class CustomMethod extends Method {
 		List <Var> paramVars = paramVars(params, call);
 		Method method = call.getRun().getMethodByName(methodName);
 		
-		Var result = call.getRun().call(method, paramVars, call);
+		Var result = call.getRun().call(method, paramVars, call, true);
 		
 		//System.out.println(methodName + " " + params);
 		return result;
@@ -363,6 +386,20 @@ public class CustomMethod extends Method {
 				case '{': {
 					needSeparator();
 					lastVar = nextBlock();
+					mergeOperator();
+					break;
+				}
+				case '$': {
+					needSeparator();
+					i++;
+					lastVar = nextPtr(call).getValue();
+					mergeOperator();
+					break;
+				}
+				case '#': {
+					needSeparator();
+					i++;
+					lastVar = nextPtr(call);
 					mergeOperator();
 					break;
 				}
@@ -437,7 +474,7 @@ public class CustomMethod extends Method {
 					needSeparator();
 					i++;
 					Script script = nextBracket();
-					lastVar = call.executeBlock("()", script);
+					lastVar = call.executeBlock("()", script, false); //TODO decide!
 					mergeOperator();
 					break;
 				default:
@@ -456,6 +493,69 @@ public class CustomMethod extends Method {
 		//System.out.println("Script: " + script.getScript() + " Result:" + result + "\t\t\t" + call);
 	}
 
+	private PtrVar nextPtr(Call call) {
+		String sourceString = script.getSource();
+		int lastIndex = script.getLastIndex();
+		if (i >= lastIndex) {
+			printIssue("Var access operator at the end of the line");
+		}
+		boolean global = false;
+		if (sourceString.charAt(i) == '!') {
+			global = true;
+			i++;
+		}
+		int startIndex = i;
+		while (i < lastIndex) {
+			boolean shouldBreak = true;
+			char c = sourceString.charAt(i);
+			switch (c) {
+				case 'a': 
+				case 'b': 
+				case 'c': 
+				case 'd': 
+				case 'e': 
+				case 'f': 
+				case 'g': 
+				case 'h': 
+				case 'i': 
+				case 'j': 
+				case 'k': 
+				case 'l': 
+				case 'm': 
+				case 'n':
+				case 'o': 
+				case 'p': 
+				case 'q': 
+				case 'r': 
+				case 's': 
+				case 't': 
+				case 'u': 
+				case 'v': 
+				case 'w': 
+				case 'x': 
+				case 'y': 
+				case 'z': 
+				case '_':  {
+					i++;
+					shouldBreak = false;
+					break;
+				}
+			}
+			if (shouldBreak) {
+				break;
+			}
+		}
+		if (startIndex == i) {
+			printIssue("Var access operator at the end of the line");
+		}
+		VarsScope entry;
+		if (global) {
+			entry = call.getRun().getRootVarsScope();
+		} else {
+			entry = call.getVarsScope();
+		}
+		return entry.getVarPtr(sourceString.substring(startIndex, i));
+	}
 	private void detectOperator() {
 		String sourceString = script.getSource();
 		int lastIndex = script.getLastIndex();

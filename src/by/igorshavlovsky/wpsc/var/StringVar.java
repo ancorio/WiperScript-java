@@ -5,11 +5,7 @@ public class StringVar extends Var<StringVar, String> {
 	private String value;
 
 	public StringVar(String value) {
-		this(null, value);
-	}
-	
-	public StringVar(String name, String value) {
-		super(name);
+		super();
 		this.value = value;
 	}
 

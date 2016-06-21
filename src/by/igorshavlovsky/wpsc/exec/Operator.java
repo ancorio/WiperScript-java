@@ -5,6 +5,7 @@ import by.igorshavlovsky.wpsc.var.FloatVar;
 import by.igorshavlovsky.wpsc.var.IntegerVar;
 import by.igorshavlovsky.wpsc.var.StringVar;
 import by.igorshavlovsky.wpsc.var.Var;
+import by.igorshavlovsky.wpsc.var.PtrVar;
 import by.igorshavlovsky.wpsc.var.VarType;
 
 public enum Operator {
@@ -133,6 +134,11 @@ public enum Operator {
 		public Var run(Var left, Var right) {
 			if (left == null) {
 				operatorUndefined(this, left, right);
+			}
+			if (left.getVarType() == VarType.PTR) {
+				PtrVar ptr = (PtrVar)left;
+				ptr.setValue(right);
+				return right.copy();
 			}
 			if (left.getVarType().equals(right.getVarType())) {
 				if (left.getVarType() == VarType.NULL) {

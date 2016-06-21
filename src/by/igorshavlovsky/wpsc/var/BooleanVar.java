@@ -3,13 +3,9 @@ package by.igorshavlovsky.wpsc.var;
 public class BooleanVar extends Var<BooleanVar, Boolean> {
 
 	private boolean value;
-
-	public BooleanVar(boolean value) {
-		this(null, value);
-	}
 	
-	public BooleanVar(String name, boolean value) {
-		super(name);
+	public BooleanVar(boolean value) {
+		super();
 		this.value = value;
 	}
 

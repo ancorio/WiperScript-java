@@ -4,8 +4,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import by.igorshavlovsky.wpsc.var.Var;
+import by.igorshavlovsky.wpsc.var.PtrVar;
 
-public class MethodContainer {
+
+public class StackEntry {
 	
 	private Map<String, Method> methods = new HashMap<String, Method>(8);
 

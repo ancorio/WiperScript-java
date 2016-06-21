@@ -2,13 +2,11 @@ package by.igorshavlovsky.wpsc.var;
 
 abstract public class Var <B extends Var<B, V>, V> {
 	
-	private String name;
-	
-	public Var(String name) {
+	public Var() {
 		super();
-		this.name = name;
 	}
-	
+
+
 	abstract public VarType getVarType();
 	abstract public Var convertTo(VarType type);
 	abstract public String stringValue();

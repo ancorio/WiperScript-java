@@ -5,11 +5,7 @@ public class IntegerVar extends Var<IntegerVar, Long> {
 	private long value;
 
 	public IntegerVar(long value) {
-		this(null, value);
-	}
-	
-	public IntegerVar(String name, long value) {
-		super(name);
+		super();
 		this.value = value;
 	}
 

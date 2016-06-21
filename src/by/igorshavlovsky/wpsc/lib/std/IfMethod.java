@@ -30,9 +30,9 @@ public class IfMethod extends Method {
 			invalidParamType(2, elseBlock);
 		}
 		if (((Boolean)var.getValue()).booleanValue()) {
-			return call.executeBlock("@then", (Script)thenBlock.getValue());
+			return call.executeBlock("@then", (Script)thenBlock.getValue(), true);
 		} else {
-			return call.executeBlock("@else", (Script)elseBlock.getValue());
+			return call.executeBlock("@else", (Script)elseBlock.getValue(), true);
 		}
 	}
 

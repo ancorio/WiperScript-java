@@ -1,6 +1,13 @@
 package by.igorshavlovsky.wpsc.exec;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -9,40 +16,18 @@ import by.igorshavlovsky.wpsc.lib.std.I2StrMethod;
 import by.igorshavlovsky.wpsc.lib.std.IfMethod;
 import by.igorshavlovsky.wpsc.lib.std.MethodDefineMethod;
 import by.igorshavlovsky.wpsc.lib.std.ParamMethod;
+import by.igorshavlovsky.wpsc.lib.std.ParamValMethod;
 import by.igorshavlovsky.wpsc.lib.std.RoundMethod;
 import by.igorshavlovsky.wpsc.lib.std.Str2IMethod;
 import by.igorshavlovsky.wpsc.lib.std.TruncMethod;
+import by.igorshavlovsky.wpsc.var.PtrVar;
 import by.igorshavlovsky.wpsc.var.Var;
 
-public class Run extends MethodContainer {
+public class Run extends StackEntry {
 
 	private List<Call> stack = new ArrayList<>(64);
 	
-	//@import();
-	//@param();
-	//@params_count();
-	//@method()@end;
-	//@return();
-	//@return_append();
-	//@style()???
-	//@var()
-	//@var_set()
-	//@var_get()
-	//@if()
-	//@else
-	//@endif
-
-	//eq(A, B)
-	//not(A)
-	//comp(A, B)
-	//or(A, B...)
-	//and(A, B...)
-	//d2i()
-	//i2d()
-	//str()
-	//str_len()
-	//{
-	//}
+	private List <VarsScope> varsScopes = new ArrayList<>(64);
 	
 	private void loadStdLib() {
 		loadMethod(new I2StrMethod());
@@ -53,20 +38,36 @@ public class Run extends MethodContainer {
 		loadMethod(new IfMethod());
 		loadMethod(new MethodDefineMethod());
 		loadMethod(new ParamMethod());
+		loadMethod(new ParamValMethod());
 	}
 	
-	
 	private void test(String script) {
-		System.out.println(call(new CustomMethod("Main", script), new ArrayList<Var>(), null));
+		System.out.println(call(new CustomMethod("Main", script), new ArrayList<Var>(), null, true));
 	}
 
 	public Run() {
 		super();
 		
+		pushVarsScope();
 		loadStdLib();
 		
+		InputStream in = null;
+		try {
+			in = new FileInputStream("./a.wsc");
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			int i;
+			while ((i = in.read()) >= 0) {
+				out.write(i);
+			}
+			String script = out.toString("UTF-8");
+			test(script);
+		} catch (FileNotFoundException e) {
+		} catch (IOException e) {
+		}
+		
+		
 
-		test("5+6*10");
+		/*
 		test("5+(6*10)");
 		
 		test("method(\"show\",{" +
@@ -77,7 +78,6 @@ public class Run extends MethodContainer {
 				 "});" + 
 				 "show_more(\"show me\");");
 		
-		/*
 		
 		test("123;2342;");
 
@@ -91,7 +91,6 @@ public class Run extends MethodContainer {
 				 ");" + 
 				 "b2s(1=1);");
 				 
-				 */
 		test("2345/23");
 		test("5=6");
 		test("7=7");
@@ -123,15 +122,18 @@ public class Run extends MethodContainer {
 
 				test("i2f(str2i(i2str(round(4.5) + trunc(4.5) + str2i(\"100\"))))");
 		test("111+222");
-		test("\"Hello!\\\" Voktor!\"");
+		test("Hello world!, 123456;");
+		test("\"Hello world\"");
+		
 		test("1234567890123");
 		test("123456.7890123");
-		test("111+222");
+		test("111+222;");
 		test("1.11+2.22");
 		test("\"Hello \"+ \" world!\"");
 		test("1+2+3+4+5+6+7+8+9");
+		*/
 	}
-	
+
 	public Method getMethodByName(String methodName) {
 		for (int i = stack.size() - 1; i >= 0; i--) {
 			Call call = stack.get(i);
@@ -152,7 +154,7 @@ public class Run extends MethodContainer {
 	}
 	
 	public Call push(Method method, List <Var> params, Call parentCall) {
-		Call call = new Call(this, method, params, parentCall);
+		Call call = new Call(this, method, params, parentCall, getCurrentVarsScope());
 		stack.add(call);
 		return call;
 	}
@@ -162,10 +164,16 @@ public class Run extends MethodContainer {
 	}
 
 	
-	public Var call(Method method, List <Var> params, Call parentCall) {
+	public Var call(Method method, List <Var> params, Call parentCall, boolean needsVarsScope) {
+		if (needsVarsScope) {
+			pushVarsScope();
+		}
 		push(method, params, parentCall);
 		Var result = call();
 		pop();
+		if (needsVarsScope) {
+			popVarsScope();
+		}
 		return result;
 	}
 
@@ -191,5 +199,25 @@ public class Run extends MethodContainer {
 	@Override
 	public String toString() {
 		return getStackTrace();
+	}
+
+	public VarsScope getRootVarsScope() {
+		return varsScopes.get(0);
+	}
+
+	public VarsScope getCurrentVarsScope() {
+		return varsScopes.get(varsScopes.size() - 1);
+	}
+
+	public VarsScope pushVarsScope() {
+		VarsScope result = new VarsScope();
+		varsScopes.add(result);
+		return result;
+	}
+	
+
+	public VarsScope popVarsScope() {
+		VarsScope result = new VarsScope();
+		return varsScopes.remove(varsScopes.size() - 1);
 	}
 }
