@@ -11,14 +11,6 @@ abstract public class Method {
 		this.name = name;
 	}
 	
-	protected void invalidParamsCount(int count) {
-		throw new RunException("Invalid params count (" + count + ") for method: " + name);
-	}
-
-	protected void invalidParamType(int i, Var var) {
-		throw new RunException("Invalid param (" + i + ") type: " + var + " for method: " + name);
-	}
-	
 	abstract public Var call(Call call);
 
 	public String getName() {

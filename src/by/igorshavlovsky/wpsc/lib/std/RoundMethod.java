@@ -14,16 +14,7 @@ public class RoundMethod extends Method {
 	
 	@Override
 	public Var call(Call call) {
-		if (call.getParamsCount() != 1) {
-			invalidParamsCount(call.getParamsCount());
-		}
-		Var var = call.getParam(0);
-		if (var.getVarType() == VarType.FLOAT) {
-			Double d = (Double) var.getValue();
-			return new IntegerVar((long)(0.5 + d.doubleValue()));
-		}
-		invalidParamType(0, var);
-		return null;
+		return new IntegerVar(call.getRun(), (long)(0.5 + call.getParamUnwrapped(0).asFloat().doubleValue()));
 	}
 
 }

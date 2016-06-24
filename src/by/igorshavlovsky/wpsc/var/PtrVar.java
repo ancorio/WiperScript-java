@@ -1,26 +1,32 @@
 package by.igorshavlovsky.wpsc.var;
 
-import by.igorshavlovsky.wpsc.exec.Preprocessor;
-import by.igorshavlovsky.wpsc.exec.Script;
-import by.igorshavlovsky.wpsc.exec.StackEntry;
-import by.igorshavlovsky.wpsc.exec.VarsScope;
+import by.igorshavlovsky.wpsc.exec.Run;
+import by.igorshavlovsky.wpsc.exec.Scope;
 
-public class PtrVar extends Var<PtrVar, Var> {
+public class PtrVar extends Var<PtrVar> {
 
 	private String name;
-	private VarsScope scope;
+	private Scope scope;
+	private boolean noUnwrap;
 
-	public PtrVar(String name, VarsScope scope) {
+	public PtrVar(Run run, String name, Scope scope, boolean noUnwrap) {
+		super(run);
 		this.name = name;
 		this.scope = scope;
-		if (getValue() == null) {
-			setValue(new NullVar());
-		}
+		this.noUnwrap = noUnwrap;
 	}
 
 	@Override
 	public VarType getVarType() {
 		return VarType.PTR;
+	}
+
+	@Override
+	public Var unwrap() {
+		if (noUnwrap) {
+			return new PtrVar(run, name, scope, false);
+		}
+		return scope.getVarsPrivate().get(name);
 	}
 
 	@Override
@@ -33,23 +39,11 @@ public class PtrVar extends Var<PtrVar, Var> {
 	}
 
 	@Override
-	public String stringValue() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public PtrVar copy() {
-		return new PtrVar(name, scope);
+		return new PtrVar(run, name, scope, noUnwrap);
 	}
 
-	@Override
-	public Var getValue() {
-		return scope.getVarsPrivate().get(name);
-	}
-
-	@Override
-	public void setValue(Var value) {
-		scope.getVarsPrivate().put(name, value);
+	protected String value() {
+		return ">" + unwrap().getDetails();
 	}
 }

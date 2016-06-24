@@ -13,15 +13,7 @@ public class Str2IMethod extends Method {
 	
 	@Override
 	public Var call(Call call) {
-		if (call.getParamsCount() != 1) {
-			invalidParamsCount(call.getParamsCount());
-		}
-		Var var = call.getParam(0);
-		if (var.getVarType() == VarType.STRING) {
-			return var.convertTo(VarType.INTEGER);
-		}
-		invalidParamType(0, var);
-		return null;
+		return call.getParamUnwrapped(0).asString().convertTo(VarType.INTEGER);
 	}
 
 }

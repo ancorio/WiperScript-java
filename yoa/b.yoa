@@ -11,3 +11,7 @@ method("compare", {
 	});
 });
 compare(33, 22);
+
+@echo{
+	$0
+};

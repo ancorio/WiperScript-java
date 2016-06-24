@@ -1,11 +1,14 @@
 package by.igorshavlovsky.wpsc.var;
 
-public class StringVar extends Var<StringVar, String> {
+import by.igorshavlovsky.wpsc.exec.Run;
+import by.igorshavlovsky.wpsc.exec.Script;
+
+public class StringVar extends Var<StringVar> {
 
 	private String value;
 
-	public StringVar(String value) {
-		super();
+	public StringVar(Run run, String value) {
+		super(run);
 		this.value = value;
 	}
 
@@ -22,16 +25,14 @@ public class StringVar extends Var<StringVar, String> {
 			case FLOAT:
 				try {
 					double val = Double.parseDouble(value);
-					return new FloatVar(val);
+					return new FloatVar(run, val);
 				} catch (NumberFormatException e) {
 					throw new VarException("Cannot cast " + getDetails() + " to " + type);
 				}
-			case NULL:
-				return new NullVar();
 			case INTEGER:
 				try {
 					long val = Long.parseLong(value);
-					return new IntegerVar(val);
+					return new IntegerVar(run, val);
 				} catch (NumberFormatException e) {
 					throw new VarException("Cannot cast " + getDetails() + " to " + type);
 				}
@@ -40,23 +41,17 @@ public class StringVar extends Var<StringVar, String> {
 	}
 
 	@Override
-	public String stringValue() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public StringVar copy() {
-		return new StringVar(value);
+		return new StringVar(run, value);
 	}
+	
+	public String stringValue() {
+		return value;
+	}
+	
 
-	@Override
-	public String getValue() {
+	protected String value() {
 		return value;
 	}
 
-	@Override
-	public void setValue(String value) {
-		this.value = value;
-	}
 }

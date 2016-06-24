@@ -1,11 +1,14 @@
 package by.igorshavlovsky.wpsc.var;
 
-public class IntegerVar extends Var<IntegerVar, Long> {
+import by.igorshavlovsky.wpsc.exec.Run;
+import by.igorshavlovsky.wpsc.exec.Script;
+
+public class IntegerVar extends Var<IntegerVar> {
 
 	private long value;
 
-	public IntegerVar(long value) {
-		super();
+	public IntegerVar(Run run, long value) {
+		super(run);
 		this.value = value;
 	}
 
@@ -18,11 +21,9 @@ public class IntegerVar extends Var<IntegerVar, Long> {
 	public Var convertTo(VarType type) {
 		switch (type) {
 			case STRING:
-				return new StringVar(String.valueOf(value));
+				return new StringVar(run, String.valueOf(value));
 			case FLOAT:
-				return new FloatVar((double)value);
-			case NULL:
-				return new NullVar();
+				return new FloatVar(run, (double)value);
 			case INTEGER:
 				return copy();
 		}
@@ -30,25 +31,16 @@ public class IntegerVar extends Var<IntegerVar, Long> {
 	}
 
 	@Override
-	public String stringValue() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public IntegerVar copy() {
-		return new IntegerVar(value);
+		return new IntegerVar(run, value);
 	}
 
-	@Override
-	public Long getValue() {
-		return Long.valueOf(value);
+	public long longValue() {
+		return value;
 	}
 
-	@Override
-	public void setValue(Long value) {
-		this.value = value.longValue();
+	protected String value() {
+		return String.valueOf(value);
 	}
-
 
 }

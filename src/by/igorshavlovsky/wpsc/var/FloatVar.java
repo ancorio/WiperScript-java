@@ -1,11 +1,13 @@
 package by.igorshavlovsky.wpsc.var;
 
-public class FloatVar extends Var<FloatVar, Double> {
+import by.igorshavlovsky.wpsc.exec.Run;
+
+public class FloatVar extends Var<FloatVar> {
 
 	private double value;
 
-	public FloatVar(double value) {
-		super();
+	public FloatVar(Run run, double value) {
+		super(run);
 		this.value = value;
 	}
 
@@ -23,30 +25,20 @@ public class FloatVar extends Var<FloatVar, Double> {
 				return copy();
 			case INTEGER:
 				throw new VarException("Cannot cast " + getDetails() + " to " + type + ". Use rounding macroses.");
-			case NULL:
-				return new NullVar();
 		}
 		throw new VarException("Cannot cast " + getDetails() + " to " + type);
 	}
 
 	@Override
-	public String stringValue() {
+	public FloatVar copy() {
+		return new FloatVar(run, value);
+	}
+
+	public double doubleValue() {
+		return value;
+	}
+	
+	protected String value() {
 		return String.valueOf(value);
 	}
-
-	@Override
-	public FloatVar copy() {
-		return new FloatVar(value);
-	}
-
-	@Override
-	public Double getValue() {
-		return Double.valueOf(value);
-	}
-
-	@Override
-	public void setValue(Double value) {
-		this.value = value.doubleValue();  
-	}
-
 }

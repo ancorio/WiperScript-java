@@ -1,15 +1,15 @@
 package by.igorshavlovsky.wpsc.var;
 
-import by.igorshavlovsky.wpsc.exec.Preprocessor;
-import by.igorshavlovsky.wpsc.exec.Script;
+import by.igorshavlovsky.wpsc.exec.Run;
+import by.igorshavlovsky.wpsc.preproc.ListOperation;
 
-public class BlockVar extends Var<BlockVar, Script> {
+public class BlockVar extends Var<BlockVar> {
 
-	private Script value;
+	private ListOperation operation;
 
-	public BlockVar(String value) {
-		super();
-		this.value = Preprocessor.prepare(value, true);
+	public BlockVar(Run run, ListOperation operation) {
+		super(run);
+		this.operation = operation;
 	}
 
 	@Override
@@ -25,25 +25,20 @@ public class BlockVar extends Var<BlockVar, Script> {
 		}
 		throw new VarException("Cannot cast " + getDetails() + " to " + type);
 	}
-
-	@Override
-	public String stringValue() {
-		// TODO Auto-generated method stub
-		return null;
+	
+	
+	public ListOperation getOperation() {
+		return operation;
 	}
 
 	@Override
 	public BlockVar copy() {
-		return new BlockVar(value.getScript());
+		return new BlockVar(run, operation);
 	}
 
 	@Override
-	public Script getValue() {
-		return value;
+	protected String value() {
+		return "{" + operation + "}";
 	}
 
-	@Override
-	public void setValue(Script value) {
-		this.value = value;
-	}
 }

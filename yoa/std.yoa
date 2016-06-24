@@ -1,0 +1,6 @@
+method("!inc", {
+	param(0) = (param_val(0) + 1);
+});
+method("!dec", {
+	param(0) = (param_val(0) + 1);
+});

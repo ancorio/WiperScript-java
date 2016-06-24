@@ -19,7 +19,7 @@ public class CustomMethod extends Method {
 	public CustomMethod(String name, String roughtScript) {
 		super(name);
 		this.roughtScript = roughtScript;
-		this.script = Preprocessor.prepare(roughtScript, true);
+		this.script = null;//Preprocessor.prepare(roughtScript, true);
 	}
 	public CustomMethod(String name, Script script) {
 		super(name);
@@ -37,11 +37,11 @@ public class CustomMethod extends Method {
 		
 		//System.out.println(script);
 		if (script.getLength() == 0) {
-			return new NullVar();
+			return new NullVar(call.getRun());
 		}
 		run(call);
 		if (result == null) {
-			result = new NullVar();
+			result = new NullVar(call.getRun());
 		}
 		return result;
 	}
@@ -52,7 +52,7 @@ public class CustomMethod extends Method {
 			System.err.print(' ');
 		}
 		System.err.println('^');
-		throw new RunException(text);
+		throw new RunException(text, null, null); //!TODO!
 	}
 	
 	private void needSeparator() {
@@ -120,7 +120,7 @@ public class CustomMethod extends Method {
 		return null;
 	}
 	
-	private Var nextBlock() {
+	private Var nextBlock(Call call) {
 		StringBuilder result = new StringBuilder();
 		i++;
 		int bracketLevel = 0;
@@ -143,14 +143,14 @@ public class CustomMethod extends Method {
 			}
 			i++;
 			if (bracketLevel < 0) {
-				return new BlockVar(sourceString.substring(start, i - 1));
+				//return new BlockVar(call.getRun(), sourceString.substring(start, i - 1));
 			}
 		}
 		printIssue("Block is not finished");
 		return null;
 	}
 	
-	private Var nextDecimal() {
+	private Var nextDecimal(Call call) {
 		StringBuilder builder = new StringBuilder(8);
 		String sourceString = script.getSource();
 		int lastIndex = script.getLastIndex();
@@ -190,9 +190,9 @@ public class CustomMethod extends Method {
 			}
 		}
 		if (gotDot) {
-			return new FloatVar(Double.parseDouble(builder.toString()));
+			return new FloatVar(call.getRun(), Double.parseDouble(builder.toString()));
 		} else {
-			return new IntegerVar(Long.parseLong(builder.toString()));
+			return new IntegerVar(call.getRun(),Long.parseLong(builder.toString()));
 		}
 	}
 	
@@ -334,13 +334,13 @@ public class CustomMethod extends Method {
 			}
 			if (bracketLvl == 0 && sourceString.charAt(i) == ',' && !paramsScript.isInString(i)) {
 				Script s = new SubScript(paramsScript, startIndex, i - startIndex);
-				result.add(call.executeBlock("@" + call.getMethod().getName() + "'s param #" + result.size(), s, false));
+				//result.add(call.executeBlock("@" + call.getMethod().getName() + "'s param #" + result.size(), s, false));
 				startIndex = i + 1;
 			}
 		}
 		if (paramsScript.getLastIndex() > 0) {
 			Script s = new SubScript(paramsScript, startIndex, lastIndex - startIndex);
-			result.add(call.executeBlock("@" + call.getMethod().getName() + "'s param #" + result.size(), s, false));
+			//result.add(call.executeBlock("@" + call.getMethod().getName() + "'s param #" + result.size(), s, false));
 		}
 		return result;
 	}
@@ -349,17 +349,18 @@ public class CustomMethod extends Method {
 		String methodName = methodName();
 		Script params = methodParams();
 		List <Var> paramVars = paramVars(params, call);
-		Method method = call.getRun().getMethodByName(methodName);
+		//Method method = call.getRun().getMethodByName(methodName);
 		
-		Var result = call.getRun().call(method, paramVars, call, true);
+		//Var result = call.getRun().call(method, paramVars, call, true);
 		
 		//System.out.println(methodName + " " + params);
-		return result;
+		//return result;
+		return null;
 	}
 	
 	@Override
 	public String toString() {
-		return getName() + ": " + Preprocessor.prepare(roughtScript, true).getScript();
+		return getName() + ": ";// + Preprocessor.prepare(roughtScript, true).getScript();
 	}
 	
 	private Operator operator = null;
@@ -379,20 +380,20 @@ public class CustomMethod extends Method {
 			switch (c) {
 				case '"': {
 					needSeparator();
-					lastVar = new StringVar(nextString());
+					lastVar = new StringVar(call.getRun(), nextString());
 					mergeOperator();
 					break;
 				}
 				case '{': {
 					needSeparator();
-					lastVar = nextBlock();
+					lastVar = nextBlock(call);
 					mergeOperator();
 					break;
 				}
 				case '$': {
 					needSeparator();
 					i++;
-					lastVar = nextPtr(call).getValue();
+					lastVar = nextPtr(call);//NO UNWRAP, OPERATOR WILL UNWRAP WHEN NEEDS IT!
 					mergeOperator();
 					break;
 				}
@@ -414,7 +415,7 @@ public class CustomMethod extends Method {
 				case '8':
 				case '9': {
 					needSeparator();
-					lastVar = nextDecimal();
+					lastVar = nextDecimal(call);
 					mergeOperator();
 					break;
 				}
@@ -474,7 +475,7 @@ public class CustomMethod extends Method {
 					needSeparator();
 					i++;
 					Script script = nextBracket();
-					lastVar = call.executeBlock("()", script, false); //TODO decide!
+					//lastVar = call.executeBlock("()", script, false); //TODO decide!
 					mergeOperator();
 					break;
 				default:
@@ -487,7 +488,7 @@ public class CustomMethod extends Method {
 			result = lastVar;
 		}
 		if (result == null) {
-			result = new NullVar();
+			result = new NullVar(call.getRun());
 		}
 
 		//System.out.println("Script: " + script.getScript() + " Result:" + result + "\t\t\t" + call);
@@ -548,11 +549,11 @@ public class CustomMethod extends Method {
 		if (startIndex == i) {
 			printIssue("Var access operator at the end of the line");
 		}
-		VarsScope entry;
+		Scope entry;
 		if (global) {
-			entry = call.getRun().getRootVarsScope();
+			entry = call.getRun().getRootScope();
 		} else {
-			entry = call.getVarsScope();
+			entry = call.getScope();
 		}
 		return entry.getVarPtr(sourceString.substring(startIndex, i));
 	}

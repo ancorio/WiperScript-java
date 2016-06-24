@@ -13,15 +13,7 @@ public class I2FMethod extends Method {
 	
 	@Override
 	public Var call(Call call) {
-		if (call.getParamsCount() != 1) {
-			invalidParamsCount(call.getParamsCount());
-		}
-		Var var = call.getParam(0);
-		if (var.getVarType() == VarType.INTEGER) {
-			return var.convertTo(VarType.FLOAT);
-		}
-		invalidParamType(0, var);
-		return null;
+		return call.getParamUnwrapped(0).asInteger().convertTo(VarType.FLOAT);
 	}
 
 }

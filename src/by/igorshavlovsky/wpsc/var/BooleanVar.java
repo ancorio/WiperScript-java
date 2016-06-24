@@ -1,11 +1,13 @@
 package by.igorshavlovsky.wpsc.var;
 
-public class BooleanVar extends Var<BooleanVar, Boolean> {
+import by.igorshavlovsky.wpsc.exec.Run;
+
+public class BooleanVar extends Var<BooleanVar> {
 
 	private boolean value;
 	
-	public BooleanVar(boolean value) {
-		super();
+	public BooleanVar(Run run, boolean value) {
+		super(run);
 		this.value = value;
 	}
 
@@ -19,30 +21,21 @@ public class BooleanVar extends Var<BooleanVar, Boolean> {
 		switch (type) {
 			case BOOLEAN:
 				return copy();
-			case NULL:
-				return new NullVar();
 		}
 		throw new VarException("Cannot cast " + getDetails() + " to " + type);
 	}
 
 	@Override
-	public String stringValue() {
-		return String.valueOf(value);
-	}
-
-	@Override
 	public BooleanVar copy() {
-		return new BooleanVar(value);
+		return new BooleanVar(run, value);
+	}
+	
+	public boolean booleanValue() {
+		return value;
 	}
 
-	@Override
-	public Boolean getValue() {
-		return Boolean.valueOf(value);
-	}
-
-	@Override
-	public void setValue(Boolean value) {
-		this.value = value.booleanValue();  
+	protected String value() {
+		return String.valueOf(value);
 	}
 
 }

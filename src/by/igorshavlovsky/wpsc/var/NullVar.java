@@ -1,9 +1,11 @@
 package by.igorshavlovsky.wpsc.var;
 
-public class NullVar extends Var<NullVar, Object> {
+import by.igorshavlovsky.wpsc.exec.Run;
+
+public class NullVar extends Var<NullVar> {
 	
-	public NullVar() {
-		super();
+	public NullVar(Run run) {
+		super(run);
 	}
 
 	@Override
@@ -16,33 +18,16 @@ public class NullVar extends Var<NullVar, Object> {
 		switch (type) {
 			case NULL:
 				return copy();
-			case FLOAT:
-				return new FloatVar(0.0);
-			case INTEGER:
-				return new IntegerVar(0);
-			case STRING:
-				return new StringVar("");
 		}
 		throw new VarException("Cannot cast " + getDetails() + " to " + type);
 	}
-
-	@Override
-	public String stringValue() {
-		return "";
-	}
-
+	
 	@Override
 	public NullVar copy() {
-		return new NullVar();
+		return new NullVar(run);
 	}
 
-	@Override
-	public Object getValue() {
-		return null;
+	protected String value() {
+		return "";
 	}
-
-	@Override
-	public void setValue(Object value) {
-	}
-	
 }

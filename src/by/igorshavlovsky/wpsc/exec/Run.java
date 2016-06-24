@@ -14,43 +14,42 @@ import java.util.Map;
 import by.igorshavlovsky.wpsc.lib.std.I2FMethod;
 import by.igorshavlovsky.wpsc.lib.std.I2StrMethod;
 import by.igorshavlovsky.wpsc.lib.std.IfMethod;
-import by.igorshavlovsky.wpsc.lib.std.MethodDefineMethod;
-import by.igorshavlovsky.wpsc.lib.std.ParamMethod;
-import by.igorshavlovsky.wpsc.lib.std.ParamValMethod;
 import by.igorshavlovsky.wpsc.lib.std.RoundMethod;
 import by.igorshavlovsky.wpsc.lib.std.Str2IMethod;
 import by.igorshavlovsky.wpsc.lib.std.TruncMethod;
+import by.igorshavlovsky.wpsc.preproc.Operation;
+import by.igorshavlovsky.wpsc.preproc.SeqOperation;
+import by.igorshavlovsky.wpsc.preproc.operation.method.MethodOperation;
 import by.igorshavlovsky.wpsc.var.PtrVar;
 import by.igorshavlovsky.wpsc.var.Var;
 
-public class Run extends StackEntry {
+public class Run {
 
 	private List<Call> stack = new ArrayList<>(64);
 	
-	private List <VarsScope> varsScopes = new ArrayList<>(64);
+	private List <Scope> scopes = new ArrayList<>(64);
 	
 	private void loadStdLib() {
-		loadMethod(new I2StrMethod());
-		loadMethod(new TruncMethod());
-		loadMethod(new RoundMethod());
-		loadMethod(new Str2IMethod());
-		loadMethod(new I2FMethod());
-		loadMethod(new IfMethod());
-		loadMethod(new MethodDefineMethod());
-		loadMethod(new ParamMethod());
-		loadMethod(new ParamValMethod());
+		Scope scope = getRootScope();
+		/*scope.loadMethod(new I2StrMethod());
+		scope.loadMethod(new TruncMethod());
+		scope.loadMethod(new RoundMethod());
+		scope.loadMethod(new Str2IMethod());
+		scope.loadMethod(new I2FMethod());
+		scope.loadMethod(new IfMethod());
+		*/
 	}
 	
 	private void test(String script) {
-		System.out.println(call(new CustomMethod("Main", script), new ArrayList<Var>(), null, true));
+	//	System.out.println(call(new CustomMethod("Main", script), new ArrayList<Var>(), null, true));
 	}
 
 	public Run() {
 		super();
 		
-		pushVarsScope();
+		pushScope();
 		loadStdLib();
-		
+		/*
 		InputStream in = null;
 		try {
 			in = new FileInputStream("./a.wsc");
@@ -65,7 +64,7 @@ public class Run extends StackEntry {
 		} catch (IOException e) {
 		}
 		
-		
+		*/
 
 		/*
 		test("5+(6*10)");
@@ -134,27 +133,23 @@ public class Run extends StackEntry {
 		*/
 	}
 
-	public Method getMethodByName(String methodName) {
-		for (int i = stack.size() - 1; i >= 0; i--) {
-			Call call = stack.get(i);
-			Method result = call.getMethods().get(methodName);
+	public MethodOperation getMethodByName(String methodName) {
+		for (int i = scopes.size() - 1; i >= 0; i--) {
+			Scope scope = scopes.get(i);
+			MethodOperation result = scope.getMethods().get(methodName);
 			if (result != null) {
 				return result;
 			}
 		}
-		Method result = getMethods().get(methodName);
-		if (result != null) {
-			return result;
-		}
-		throw new RunException("Cannot find method " + methodName);
+		return null;
 	}
 	
 	public Var call() {
 		return stack.get(stack.size() - 1).call();
 	}
 	
-	public Call push(Method method, List <Var> params, Call parentCall) {
-		Call call = new Call(this, method, params, parentCall, getCurrentVarsScope());
+	public Call push(MethodOperation method, List <Var> params) {
+		Call call = new Call(this, method, params, getCurrentScope());
 		stack.add(call);
 		return call;
 	}
@@ -162,17 +157,16 @@ public class Run extends StackEntry {
 	public void pop() {
 		stack.remove(stack.size() - 1);
 	}
-
 	
-	public Var call(Method method, List <Var> params, Call parentCall, boolean needsVarsScope) {
-		if (needsVarsScope) {
-			pushVarsScope();
+	public Var call(MethodOperation method, List <Var> params, boolean needsScope) {
+		if (needsScope) {
+			pushScope();
 		}
-		push(method, params, parentCall);
+		push(method, params);
 		Var result = call();
 		pop();
-		if (needsVarsScope) {
-			popVarsScope();
+		if (needsScope) {
+			popScope();
 		}
 		return result;
 	}
@@ -201,23 +195,24 @@ public class Run extends StackEntry {
 		return getStackTrace();
 	}
 
-	public VarsScope getRootVarsScope() {
-		return varsScopes.get(0);
+	public Scope getRootScope() {
+		return scopes.get(0);
 	}
 
-	public VarsScope getCurrentVarsScope() {
-		return varsScopes.get(varsScopes.size() - 1);
+	public Scope getCurrentScope() {
+		return scopes.get(scopes.size() - 1);
 	}
 
-	public VarsScope pushVarsScope() {
-		VarsScope result = new VarsScope();
-		varsScopes.add(result);
+	public Scope pushScope() {
+		Scope result = new Scope(this);
+		scopes.add(result);
 		return result;
 	}
 	
 
-	public VarsScope popVarsScope() {
-		VarsScope result = new VarsScope();
-		return varsScopes.remove(varsScopes.size() - 1);
+	public Scope popScope() {
+		Scope result = new Scope(this);
+		return scopes.remove(scopes.size() - 1);
 	}
+
 }
