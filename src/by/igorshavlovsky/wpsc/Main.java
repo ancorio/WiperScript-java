@@ -29,7 +29,6 @@ public class Main {
 			test("111+222", env);
 			test("2+2*2", env);
 			test("1+2*3/4", env);
-			test("1+1", env);
 			test(" 1 \n+\n\n 1\n\n ", env);
 			test(" 3 \n+\n\n 2\n\n ; 3 \n+\n\n 3\n\n ; 5 \n+\n\n 1\n\n ; 5 \n+\n\n 5\n\n ", env);
 			test("$x=5; $x = -10 + $x *4; $x", env);
