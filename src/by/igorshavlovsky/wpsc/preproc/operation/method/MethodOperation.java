@@ -48,4 +48,8 @@ public class MethodOperation extends ListOperation {
 		}
 	}
 
+	public boolean isBlockScope() {
+		return true;
+	}
+
 }

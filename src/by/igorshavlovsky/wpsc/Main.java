@@ -4,6 +4,7 @@ import by.igorshavlovsky.wpsc.exec.Run;
 import by.igorshavlovsky.wpsc.preproc.Preprocessor;
 import by.igorshavlovsky.wpsc.preproc.PreprocessorException;
 import by.igorshavlovsky.wpsc.preproc.operation.method.MethodI2Str;
+import by.igorshavlovsky.wpsc.preproc.operation.method.MethodIf;
 import by.igorshavlovsky.wpsc.preproc.operation.method.MethodOperation;
 
 public class Main {
@@ -21,7 +22,8 @@ public class Main {
 		try {
 			Run env = new Run();
 			env.getRootScope().loadMethod(new MethodI2Str());
-			test("@!ttt{$1};", env);
+			env.getRootScope().loadMethod(new MethodIf());
+			/*test("@!ttt{$1};", env);
 			test("ttt(123, 5353,\"\", \"asdasd\" + \"sdsafd\");", env);
 			test("1+2+3+4+(5-5)", env);
 			test("{123+232}", env);
@@ -36,6 +38,11 @@ public class Main {
 			test("@sum{$1+$2};\nsum(\"asd\", \"asdasd\")", env);
 			test("@count{\"total params count: \" + i2str($0)};\ncount(\"one\",\"two\",\"three\",\"four\",\"five\");", env);
 			test("@printer{$($1 + 1)};printer(2,\"one\",\"two\",\"three\",\"four\",\"five\");", env);
+			*/
+
+			test("if(1==2, {\"yes\"}, {\"No\"})", env);
+			
+			test("@testif{if($1==$2, {if($1 > 5, {99}, {88})}, {if($2 > 5, {$2}, {66})})};testif(6,8)", env);
 			
 			
 		} catch (Exception e) {

@@ -119,7 +119,7 @@ public enum Operator {
 
 		@Override
 		public int length() {
-			return 1;
+			return 2;
 		}
 	}, ASSIGN {
 		public String toString() {
