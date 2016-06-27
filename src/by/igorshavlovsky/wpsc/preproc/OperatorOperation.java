@@ -29,7 +29,7 @@ public class OperatorOperation extends Operation {
 	
 	@Override
 	public String toString() {
-		return "+";
+		return operator.toString();
 	}
 
 }

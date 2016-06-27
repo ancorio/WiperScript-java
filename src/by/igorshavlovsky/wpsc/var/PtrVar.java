@@ -15,6 +15,44 @@ public class PtrVar extends Var<PtrVar> {
 		this.scope = scope;
 		this.noUnwrap = noUnwrap;
 	}
+	
+	
+
+	public String getName() {
+		return name;
+	}
+
+
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+
+
+	public Scope getScope() {
+		return scope;
+	}
+
+
+
+	public void setScope(Scope scope) {
+		this.scope = scope;
+	}
+
+
+
+	public boolean isNoUnwrap() {
+		return noUnwrap;
+	}
+
+
+
+	public void setNoUnwrap(boolean noUnwrap) {
+		this.noUnwrap = noUnwrap;
+	}
+
+
 
 	@Override
 	public VarType getVarType() {
@@ -44,6 +82,6 @@ public class PtrVar extends Var<PtrVar> {
 	}
 
 	protected String value() {
-		return ">" + unwrap().getDetails();
+		return ">(" + scope.getVarsPrivate().get(name) + ")";
 	}
 }

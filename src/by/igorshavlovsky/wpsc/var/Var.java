@@ -72,6 +72,13 @@ abstract public class Var <B extends Var<B>> {
 		throw new RunException(this.getDetails() + " is not a Block", run, null);
 	}
 
+	public PtrVar asPtr() {
+		if (getVarType() == VarType.PTR) {
+			return (PtrVar)this;
+		}
+		throw new RunException(this.getDetails() + " is not a Pointer", run, null);
+	}
+
 	public Run getRun() {
 		return run;
 	}

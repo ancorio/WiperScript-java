@@ -9,6 +9,8 @@ import com.sun.org.apache.bcel.internal.generic.LLOAD;
 import by.igorshavlovsky.wpsc.exec.Operator;
 import by.igorshavlovsky.wpsc.exec.Run;
 import by.igorshavlovsky.wpsc.exec.RunException;
+import by.igorshavlovsky.wpsc.preproc.MethodDefineOperation.Scope;
+import by.igorshavlovsky.wpsc.preproc.VarOperation.VarScope;
 import by.igorshavlovsky.wpsc.var.BlockVar;
 import by.igorshavlovsky.wpsc.var.FloatVar;
 import by.igorshavlovsky.wpsc.var.IntegerVar;
@@ -114,6 +116,70 @@ public class Preprocessor {
 		if (hasCurrent()) {
 			boolean needStringAppend = true;
 			boolean result = false;
+			switch (lookup) {
+				case METHOD_PARAM: {
+					switch (get()) {
+						case ')':
+						case ',': {
+							if (!inString && bracketLvl == lookupBracketLvl + 1 && blockLvl == lookupBlockLvl + 1) {
+								return true;
+							}
+							break;
+						}
+					}
+					break;
+				}
+				case METHOD_NAME: {
+					switch (get()) {
+						case 'a': 
+						case 'b': 
+						case 'c': 
+						case 'd': 
+						case 'e': 
+						case 'f': 
+						case 'g': 
+						case 'h': 
+						case 'i': 
+						case 'j': 
+						case 'k': 
+						case 'l': 
+						case 'm': 
+						case 'n':
+						case 'o': 
+						case 'p': 
+						case 'q': 
+						case 'r': 
+						case 's': 
+						case 't': 
+						case 'u': 
+						case 'v': 
+						case 'w': 
+						case 'x': 
+						case 'y': 
+						case 'z':
+						case '0':
+						case '1':
+						case '2':
+						case '3':
+						case '4':
+						case '5':
+						case '6':
+						case '7':
+						case '8':
+						case '9':
+						case '_': {
+							lookupStringBuilder.append(get());
+							i++;
+							return false;
+						}
+						default: {
+							return true;
+						}
+					}
+				}
+				default:
+					break;
+			}
 			if (inString && escaped) {
 				switch (get()) {
 					case 'r':
@@ -159,8 +225,14 @@ public class Preprocessor {
 				case '}': {
 					if (!inString) {
 						blockLvl--;
-						if (lookup == Lookup.BLOCK && blockLvl == lookupBlockLvl) {
-							result = true;
+						if (blockLvl == lookupBlockLvl) {
+							if (lookup == Lookup.BLOCK) {
+								result = true;
+							} else {
+								if (lookup != Lookup.NONE) {
+									throw new PreprocessorException("Block closed during looking up for " + lookup, this);
+								}
+							}
 						}
 					}
 					break;
@@ -175,8 +247,14 @@ public class Preprocessor {
 					if (!inString && blockLvl == 0) {
 						bracketLvl--;
 					}
-					if (lookup == Lookup.BRACKET && bracketLvl == lookupBracketLvl) {
-						result = true;
+					if (bracketLvl == lookupBracketLvl) {
+						if (lookup == Lookup.BRACKET) {
+							result = true;
+						} else {
+							if (lookup != Lookup.NONE) {
+								throw new PreprocessorException("Bracket closed during looking up for " + lookup, this);
+							}
+						}
 					}
 					break;
 				}
@@ -185,7 +263,7 @@ public class Preprocessor {
 				case '\t':
 					throw new PreprocessorException("Unescaped symbol inside string constant", this);
 			}
-			if (lookup != null) {
+			if (lookup != Lookup.NONE) {
 				if (lookup == Lookup.STRING) {
 					if (needStringAppend) {
 						lookupStringBuilder.append(get());
@@ -201,21 +279,30 @@ public class Preprocessor {
 			i++;
 			return result;
 		} else {
-			if (lookup != null) {
-				throw new PreprocessorException("Failed to lookup for " + lookup, this);
+			switch (lookup) {
+				case NONE: {
+					return false;
+				}
+				case METHOD_NAME: {
+					return true;
+				}
+				default: {
+					throw new PreprocessorException("Failed to lookup for " + lookup, this);
+				}
 			}
 		}
-		i++;
-		return false;
 	}
 	
 	private static enum Lookup {
+		NONE,
 		BRACKET,
 		STRING,
-		BLOCK
+		BLOCK,
+		METHOD_NAME,
+		METHOD_PARAM
 	};
 	
-	private Lookup lookup = null;
+	private Lookup lookup = Lookup.NONE;
 	
 	private List<Operation> operations = new ArrayList<>(256);
 	
@@ -242,7 +329,7 @@ public class Preprocessor {
 		result = null;
 	}
 
-	private void nextDecimal() throws PreprocessorException {
+	private ConstOperation nextDecimal() throws PreprocessorException {
 		int start = i;
 		boolean hasDot = false;;
 		StringBuilder result = new StringBuilder();
@@ -259,7 +346,13 @@ public class Preprocessor {
 				case '7':
 				case '8':
 				case '9':
-					result.append(get());//TODO optimize
+					result.append(get());
+					break;
+
+				case '-':
+					if (result.length() == 0) {
+						result.append(get());
+					}
 					break;
 				case '.':
 					result.append(get());
@@ -279,9 +372,9 @@ public class Preprocessor {
 		}
 		try {
 			if (hasDot) {
-				operations.add(new VarOperation(new FloatVar(run, Double.parseDouble(result.toString())), new ScriptLink(input, start, i)));
+				return new ConstOperation(new FloatVar(run, Double.parseDouble(result.toString())), new ScriptLink(input, start, i));
 			} else {
-				operations.add(new VarOperation(new IntegerVar(run, Long.parseLong(result.toString())), new ScriptLink(input, start, i)));
+				return new ConstOperation(new IntegerVar(run, Long.parseLong(result.toString())), new ScriptLink(input, start, i));
 			}
 		} catch (Exception e) {
 			throw new PreprocessorException("Cannot parse decimal", this);
@@ -328,11 +421,18 @@ public class Preprocessor {
 				case '7':
 				case '8':
 				case '9': {
-					nextDecimal();
+					operations.add(nextDecimal());
 					break;
 				}
+				case '-': {
+					if (operations.size() == 0 || operations.get(operations.size() - 1).isOperator()) {
+						operations.add(nextDecimal());
+						break;
+					} else {
+						//NO BREAK, PAY ATTENTION!
+					}
+				}
 				case '+':
-				case '-':
 				case '*':
 				case '/':
 				case '<':
@@ -343,7 +443,7 @@ public class Preprocessor {
 					break;
 				case '"': {
 					ScriptLink link = lookupFor(Lookup.STRING);
-					operations.add(new VarOperation(new StringVar(run, lookupStringBuilder.toString()), link));
+					operations.add(new ConstOperation(new StringVar(run, lookupStringBuilder.toString()), link));
 					break;
 				}
 				case '{': {
@@ -351,11 +451,187 @@ public class Preprocessor {
 					ListOperation operation = new ListOperation(link);
 					Preprocessor p = new Preprocessor(run);
 					p.parseFlatten(lookupStringBuilder.toString(), operation);
-					operations.add(new VarOperation(new BlockVar(run, operation), link));
+					operations.add(new ConstOperation(new BlockVar(run, operation), link));
 					break;
 				}
+				case '(': {
+					ScriptLink link = lookupFor(Lookup.BRACKET);
+					ListOperation operation = new ListOperation(link);
+					Preprocessor p = new Preprocessor(run);
+					p.parseFlatten(lookupStringBuilder.toString(), operation);
+					operations.add(operation);
+					
+					break;
+				}
+				case '@': {
+					if (!hasNext()) {
+						throw new PreprocessorException("Method define at the end of the script", this);
+					}
+					next();
+					boolean global = false;
+					if (get() == '!') {
+						global = true;
+						if (!hasNext()) {
+							throw new PreprocessorException("Method define at the end of the script", this);
+						}
+						next();
+					}
+					ScriptLink nameLink = lookupFor(Lookup.METHOD_NAME);
+					String methodName = lookupStringBuilder.toString();
+					if (methodName.length() == 0) {
+						throw new PreprocessorException("Method name cannot be empty.", this);
+					}
+					if (!hasCurrent() || get() != '{') {
+						throw new PreprocessorException("Method definition requires block after the name.", this);
+					}
+					ScriptLink blockLink = lookupFor(Lookup.BLOCK);
+					ListOperation blockOperation = new ListOperation(blockLink);
+					Preprocessor p = new Preprocessor(run);
+					p.parseFlatten(lookupStringBuilder.toString(), blockOperation);
+					BlockVar blockVar = new BlockVar(run, blockOperation);
+					operations.add(new MethodDefineOperation(global ? Scope.GLOBAL : Scope.LOCAL, methodName, blockVar, new ScriptLink(blockLink.getScript(), nameLink.getBeginIndex(), blockLink.getEndIndex())));
+					break;
+				}
+				
+				case '$': {
+					int start = i;
+					next();
+					if (!hasCurrent()) {
+						throw new PreprocessorException("Var define at the end of the script", this);
+					}
+					VarScope scope = VarScope.LOCAL;
+					if (get() == '!') {
+						next();
+						scope = VarScope.GLOBAL;
+					}
+					if (!hasCurrent()) {
+						throw new PreprocessorException("Var define at the end of the script", this);
+					}
+					Operation resolver = null;
+					switch (get()) {
+						case '0':
+						case '1':
+						case '2':
+						case '3':
+						case '4':
+						case '5':
+						case '6':
+						case '7':
+						case '8':
+						case '9': {
+							resolver = nextDecimal();
+							break;
+						}
+						case 'a': 
+						case 'b': 
+						case 'c': 
+						case 'd': 
+						case 'e': 
+						case 'f': 
+						case 'g': 
+						case 'h': 
+						case 'i': 
+						case 'j': 
+						case 'k': 
+						case 'l': 
+						case 'm': 
+						case 'n':
+						case 'o': 
+						case 'p': 
+						case 'q': 
+						case 'r': 
+						case 's': 
+						case 't': 
+						case 'u': 
+						case 'v': 
+						case 'w': 
+						case 'x': 
+						case 'y': 
+						case 'z': 
+						case '_': {
+							ScriptLink link = lookupFor(Lookup.METHOD_NAME);
+							resolver = new ConstOperation(new StringVar(run,  lookupStringBuilder.toString()), link);
+							break;
+						}
+						case '(': {
+							ScriptLink link = lookupFor(Lookup.BRACKET);
+							ListOperation operation = new ListOperation(link);
+							Preprocessor p = new Preprocessor(run);
+							p.parseFlatten(lookupStringBuilder.toString(), operation);
+							resolver = operation;
+							break;
+						}
+						
+					}
+					operations.add(new VarOperation(new ScriptLink(input, start, i), scope, resolver));
+					break;
+				}
+				
+				case 'a': 
+				case 'b': 
+				case 'c': 
+				case 'd': 
+				case 'e': 
+				case 'f': 
+				case 'g': 
+				case 'h': 
+				case 'i': 
+				case 'j': 
+				case 'k': 
+				case 'l': 
+				case 'm': 
+				case 'n':
+				case 'o': 
+				case 'p': 
+				case 'q': 
+				case 'r': 
+				case 's': 
+				case 't': 
+				case 'u': 
+				case 'v': 
+				case 'w': 
+				case 'x': 
+				case 'y': 
+				case 'z': 
+				case '_': {
+					ScriptLink nameLink = lookupFor(Lookup.METHOD_NAME);
+					String methodName = lookupStringBuilder.toString();
+					if (methodName.length() == 0) {
+						throw new PreprocessorException("Method name cannot be empty.", this);
+					}
+					if (!hasCurrent() || get() != '(') {
+						throw new PreprocessorException("Method call requires ( after the name.", this);
+					}
+					next();
+					List <Operation> params = new ArrayList<>(); 
+					while (true) {
+						if (get() == ')') {
+							next();
+							break;
+						}
+						if (!hasCurrent() || !hasNext()) {
+							throw new PreprocessorException("Cannot find ) for method call", this);
+						}
+						ScriptLink link = lookupFor(Lookup.METHOD_PARAM);
+						if (link.getBeginIndex() == link.getEndIndex()) {
+							throw new PreprocessorException("Empty method param", this);
+						}
+						ListOperation operation = new ListOperation(link);
+						Preprocessor p = new Preprocessor(run);
+						p.parseFlatten(lookupStringBuilder.toString(), operation);
+						params.add(operation);
+						if (get() == ')') {
+							next();
+							break;
+						}
+						next();
+					}
+					operations.add(new MethodCallOperation(methodName, params, new ScriptLink(nameLink.getScript(), nameLink.getBeginIndex(), i)));
+					break;
+				}
+				
 				default:
-					throw new PreprocessorException("Unknown operation", this);
+					throw new PreprocessorException("Unknown operation " + get(), this);
 			}
 		}
 		flush(begin, i);
@@ -366,7 +642,9 @@ public class Preprocessor {
 	
 	private ScriptLink lookupFor(Lookup lookup) throws PreprocessorException {
 		int start = i;
-		next();
+		if (lookup != Lookup.METHOD_NAME && lookup != Lookup.METHOD_PARAM) {
+			next();
+		}
 		this.lookup = lookup;
 		lookupStringBuilder = new StringBuilder();
 		lookupBracketLvl = bracketLvl - 1;
@@ -377,8 +655,26 @@ public class Preprocessor {
 		}
 		
 
-		lookup = null;
+		this.lookup = Lookup.NONE;
 		return new ScriptLink(input, start, i);
+	}
+
+	public String getInput() {
+		return input;
+	}
+
+	public int getI() {
+		return i;
+	}
+	
+	@Override
+	public String toString() {
+		String result = input + "\n";
+		for (int k = 0; k < i; k++) {
+			result += " ";
+		}
+		result += "^";
+		return result;
 	}
 
 	

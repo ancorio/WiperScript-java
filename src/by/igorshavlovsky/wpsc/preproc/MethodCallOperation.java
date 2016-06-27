@@ -34,7 +34,7 @@ public class MethodCallOperation extends ListOperation {
 		Var result = null;
 		MethodOperation method = call.getRun().getMethodByName(methodName);
 		if (method == null) {
-			throw new RunException("Cannot find method: " + method, call.getRun(), this);
+			throw new RunException("Cannot find method: " + methodName, call.getRun(), this);
 		}
 		List<Var> params = new ArrayList<>(operations.size());
 		for (Operation operation : operations) {
@@ -42,21 +42,25 @@ public class MethodCallOperation extends ListOperation {
 			if (param == null) {
 				throw new RunException("Param operation returned null", call.getRun(), operation);
 			}
-			params.add(param);
+			params.add(param.unwrap());
 		}
-		call.getRun().call(method, params, true);
+		result = call.getRun().call(method, params, true);
 		return result;
-	}
-	
-
-	public String getScript() {
-		return "TODO";
 	}
 	
 	@Override
 	public String toString() {
-		return "MCall: " + methodName + "(" + operations + ")" + ";";
+		StringBuilder result = new StringBuilder();
+		boolean f = false;
+		for (Operation op : operations) {
+			if (f) {
+				result.append(", ");
+			} else {
+				f = true;
+			}
+			result.append(op.toString());
+		}
+		return methodName + "(" + result.toString() + ")";
 	}
 	
-
 }

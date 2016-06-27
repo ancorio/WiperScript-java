@@ -38,5 +38,14 @@ public class MethodOperation extends ListOperation {
 	public void setName(String name) {
 		this.name = name;
 	}
+	
+	@Override
+	public String toString() {
+		if (name != null && name.length() > 0) {
+			return name;
+		} else {
+			return super.toString();
+		}
+	}
 
 }

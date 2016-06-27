@@ -43,7 +43,7 @@ public class SeqOperation extends ListOperation {
 				switch (op.getOperator()) {
 					case ASSIGN: {
 						Var right = resolveCompares(call, pos + 1, end);
-						Var left = resolveAssigns(call, 0, pos);
+						Var left = resolveAssigns(call, start, pos);
 						return op.getOperator().run(left, right);
 					}
 				}
@@ -65,7 +65,7 @@ public class SeqOperation extends ListOperation {
 					case NOT_EQUAL:
 					case LESS:
 					case GATHER: {
-						Var left = resolveCompares(call, 0, pos);
+						Var left = resolveCompares(call, start, pos);
 						Var right = resolveSums(call, pos + 1, end);
 						return op.getOperator().run(left, right);
 					}
@@ -88,7 +88,7 @@ public class SeqOperation extends ListOperation {
 				switch (op.getOperator()) {
 					case PLUS:
 					case MINUS:{
-						Var left = resolveSums(call, 0, pos);
+						Var left = resolveSums(call, start, pos);
 						Var right = resolveMuls(call, pos + 1, end);
 						return op.getOperator().run(left, right);
 					}
@@ -112,7 +112,7 @@ public class SeqOperation extends ListOperation {
 				switch (op.getOperator()) {
 					case MUL:
 					case DIV:{
-						Var left = resolveMuls(call, 0, pos);
+						Var left = resolveMuls(call, start, pos);
 						Var right = operations.get(pos + 1).resolve(call);// this will resolve a constant/method/()
 						return op.getOperator().run(left, right);
 					}
@@ -156,7 +156,17 @@ public class SeqOperation extends ListOperation {
 	
 	@Override
 	public String toString() {
-		return operations.toString();
+		if (operations.size() == 0) {
+			return "-";
+		}
+		if (operations.size() == 1) {
+			return operations.get(0).toString();
+		}
+		StringBuilder result = new StringBuilder();
+		for (Operation op : operations) {
+			result.append(op.toString());
+		}
+		return '(' + result.toString() + ')';
 	}
 
 

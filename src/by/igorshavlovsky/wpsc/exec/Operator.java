@@ -20,6 +20,8 @@ public enum Operator {
 				operatorUndefined(this, left, right);
 				return null;
 			}
+			left = left.unwrap();
+			right = right.unwrap();
 			if (left.isDecimal() || right.isDecimal()) {
 				if (left.getVarType() == VarType.INTEGER && right.getVarType() == VarType.INTEGER) {
 					return new IntegerVar(right.getRun(), left.asInteger().longValue() + right.asInteger().longValue());
@@ -55,15 +57,11 @@ public enum Operator {
 		@Override
 		public Var run(Var left, Var right) {
 			if (left == null) {
-				switch (right.getVarType()) {
-					case FLOAT:
-					case INTEGER:
-						break;
-					default:
-						operatorUndefined(this, left, right);
-						return null;
-				}
+				operatorUndefined(this, left, right);
+				return null;
 			}
+			left = left.unwrap();
+			right = right.unwrap();
 			if ((left == null || left.getVarType() == VarType.INTEGER) && right.getVarType() == VarType.INTEGER) {
 				return new IntegerVar(right.getRun(), (left == null ? 0L : left.asInteger().longValue()) - right.asInteger().longValue());
 			}
@@ -95,6 +93,8 @@ public enum Operator {
 			if (left == null) {
 				operatorUndefined(this, left, right);
 			}
+			left = left.unwrap();
+			right = right.unwrap();
 			if (left.isDecimal() && right.isDecimal()) {
 				double lv = left.getVarType() == VarType.INTEGER ? left.asInteger().longValue() : left.asFloat().doubleValue();
 				double rv = right.getVarType() == VarType.INTEGER ? right.asInteger().longValue() : right.asFloat().doubleValue();	
@@ -127,24 +127,17 @@ public enum Operator {
 		}
 		@Override
 		public Var run(Var left, Var right) {
-			//!TODO
-			/*
-			if (left == null) {
+			if (left.getVarType() != VarType.PTR) {
 				operatorUndefined(this, left, right);
 			}
-			if (left.getVarType() == VarType.PTR) {
-				PtrVar ptr = (PtrVar)left;
-			//	ptr.setValue(right);
-				return right.copy();
-			}
-			*/
-			operatorUndefined(this, left, right);
-			return null;
+			right = right.unwrap();
+			left.asPtr().getScope().getVarsPrivate().put(left.asPtr().getName(), right);
+			return right;
 		}
 
 		@Override
 		public boolean detect(String string) {
-			return string.charAt(0) == '=' && string.charAt(0) != '=';
+			return string.charAt(0) == '=' && string.charAt(1) != '=';
 		}
 
 		@Override
@@ -161,6 +154,8 @@ public enum Operator {
 			if (left == null) {
 				operatorUndefined(this, left, right);
 			}
+			left = left.unwrap();
+			right = right.unwrap();
 			if (left.isDecimal() && right.isDecimal()) {
 				double lv = left.getVarType() == VarType.INTEGER ? left.asInteger().longValue() : left.asFloat().doubleValue();
 				double rv = right.getVarType() == VarType.INTEGER ? right.asInteger().longValue() : right.asFloat().doubleValue();	
@@ -189,6 +184,8 @@ public enum Operator {
 			if (left == null) {
 				operatorUndefined(this, left, right);
 			}
+			left = left.unwrap();
+			right = right.unwrap();
 			if (left.isDecimal() && right.isDecimal()) {
 				double lv = left.getVarType() == VarType.INTEGER ? left.asInteger().longValue() : left.asFloat().doubleValue();
 				double rv = right.getVarType() == VarType.INTEGER ? right.asInteger().longValue() : right.asFloat().doubleValue();	
@@ -217,6 +214,8 @@ public enum Operator {
 			if (left == null) {
 				operatorUndefined(this, left, right);
 			}
+			left = left.unwrap();
+			right = right.unwrap();
 			if (left.isDecimal() && right.isDecimal()) {
 				double lv = left.getVarType() == VarType.INTEGER ? left.asInteger().longValue() : left.asFloat().doubleValue();
 				double rv = right.getVarType() == VarType.INTEGER ? right.asInteger().longValue() : right.asFloat().doubleValue();	
@@ -245,6 +244,8 @@ public enum Operator {
 			if (left == null) {
 				operatorUndefined(this, left, right);
 			}
+			left = left.unwrap();
+			right = right.unwrap();
 			if (left.isDecimal() && right.isDecimal()) {
 				double lv = left.getVarType() == VarType.INTEGER ? left.asInteger().longValue() : left.asFloat().doubleValue();
 				double rv = right.getVarType() == VarType.INTEGER ? right.asInteger().longValue() : right.asFloat().doubleValue();	
@@ -273,6 +274,8 @@ public enum Operator {
 			if (left == null) {
 				operatorUndefined(this, left, right);
 			}
+			left = left.unwrap();
+			right = right.unwrap();
 			if (left.isDecimal() && right.isDecimal()) {
 				double lv = left.getVarType() == VarType.INTEGER ? left.asInteger().longValue() : left.asFloat().doubleValue();
 				double rv = right.getVarType() == VarType.INTEGER ? right.asInteger().longValue() : right.asFloat().doubleValue();	
@@ -301,6 +304,8 @@ public enum Operator {
 			if (left == null) {
 				operatorUndefined(this, left, right);
 			}
+			left = left.unwrap();
+			right = right.unwrap();
 			if (left.getVarType() == VarType.INTEGER && right.getVarType() == VarType.INTEGER) {
 				return new IntegerVar(right.getRun(), left.asInteger().longValue() * right.asInteger().longValue());
 			}
@@ -332,6 +337,8 @@ public enum Operator {
 			if (left == null) {
 				operatorUndefined(this, left, right);
 			}
+			left = left.unwrap();
+			right = right.unwrap();
 			if (left.getVarType() == VarType.INTEGER && right.getVarType() == VarType.INTEGER) {
 				return new IntegerVar(right.getRun(), left.asInteger().longValue() / right.asInteger().longValue());
 			}

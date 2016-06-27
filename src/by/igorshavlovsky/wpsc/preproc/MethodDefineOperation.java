@@ -39,7 +39,7 @@ public class MethodDefineOperation extends Operation {
 
 	@Override
 	public String toString() {
-		return "MDef: " + "(" + block + ")" + ";";
+		return "@" + (scope == Scope.GLOBAL ? "!" : "") + name + "{" + block.getOperation() + "}";
 	}
 
 }
