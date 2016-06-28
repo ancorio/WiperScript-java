@@ -1,6 +1,8 @@
 package by.igorshavlovsky.wpsc.var;
 
+import by.igorshavlovsky.wpsc.exec.Call;
 import by.igorshavlovsky.wpsc.exec.Run;
+import by.igorshavlovsky.wpsc.exec.Scope;
 import by.igorshavlovsky.wpsc.preproc.ListOperation;
 
 public class BlockVar extends Var<BlockVar> {
@@ -39,6 +41,16 @@ public class BlockVar extends Var<BlockVar> {
 	@Override
 	protected String value() {
 		return "{" + operation + "}";
+	}
+	
+	private Call call = null;
+
+	public Call getCall() {
+		return call;
+	}
+
+	public void setCall(Call call) {
+		this.call = call;
 	}
 
 }

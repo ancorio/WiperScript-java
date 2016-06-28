@@ -15,9 +15,9 @@ public class MethodWhile extends MethodOperation {
 	public Var resolve(Call call) {
 		BlockVar cond = call.getParamUnwrapped(0).asBlock();
 		BlockVar exec = call.getParamUnwrapped(1).asBlock();
-		while (cond.getOperation().resolve(call.getBlockScope(this)).asBoolean().booleanValue()) {
+		while (cond.getOperation().resolve(cond.getCall()).asBoolean().booleanValue()) {
 			try {
-				exec.getOperation().resolve(call.getBlockScope(this));				
+				exec.getOperation().resolve(exec.getCall());				
 			} catch (BreakException e) {
 				break;
 			}

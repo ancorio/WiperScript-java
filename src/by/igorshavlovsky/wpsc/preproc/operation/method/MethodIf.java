@@ -18,13 +18,13 @@ public class MethodIf extends MethodOperation {
 		BooleanVar cond = call.getParamUnwrapped(0).asBoolean();
 		if (cond.booleanValue()) {
 			BlockVar then = call.getParamUnwrapped(1).asBlock();
-			return then.getOperation().resolve(call.getBlockScope(this));
+			return then.getOperation().resolve(then.getCall());
 		} else {
 			if (call.getParamsCount() < 3) {
 				return new NullVar(call.getRun());
 			}
 			BlockVar elseBlock = call.getParamUnwrapped(2).asBlock();
-			return elseBlock.getOperation().resolve(call.getBlockScope(this));
+			return elseBlock.getOperation().resolve(elseBlock.getCall());
 		}
 	}
 

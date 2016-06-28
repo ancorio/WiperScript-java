@@ -78,16 +78,5 @@ public class Call {
 	public MethodOperation getMethod() {
 		return operation;
 	}
-
-
-	public Call getBlockScope(Operation op) {
-		for (int i = run.getStack().indexOf(this) - 1; i >= 0; i--) {
-			if (run.getStack().get(i).getMethod().isBlockScope()) {
-				return run.getStack().get(i);
-			}
-		}
-		throw new RunException("Cannot find block scope", run, op);
-	}
-	
 	
 }

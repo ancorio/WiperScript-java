@@ -2,7 +2,9 @@ package by.igorshavlovsky.wpsc.preproc;
 
 import by.igorshavlovsky.wpsc.exec.Call;
 import by.igorshavlovsky.wpsc.exec.RunException;
+import by.igorshavlovsky.wpsc.var.BlockVar;
 import by.igorshavlovsky.wpsc.var.Var;
+import by.igorshavlovsky.wpsc.var.VarType;
 
 public class ConstOperation extends Operation {
 	
@@ -15,6 +17,14 @@ public class ConstOperation extends Operation {
 
 	@Override
 	public Var resolve(Call call) {
+		if (value.getVarType() == VarType.BLOCK) {
+			BlockVar block = value.asBlock();
+			if (block.getCall() == null) {
+				block = block.copy();
+				block.setCall(call);
+			}
+			return block;
+		}
 		return value;
 	}
 	
