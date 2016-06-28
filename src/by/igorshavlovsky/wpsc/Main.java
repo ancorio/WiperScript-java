@@ -16,6 +16,7 @@ import by.igorshavlovsky.wpsc.preproc.operation.method.MethodIf;
 import by.igorshavlovsky.wpsc.preproc.operation.method.MethodLog;
 import by.igorshavlovsky.wpsc.preproc.operation.method.MethodNull;
 import by.igorshavlovsky.wpsc.preproc.operation.method.MethodOperation;
+import by.igorshavlovsky.wpsc.preproc.operation.method.MethodReturn;
 import by.igorshavlovsky.wpsc.preproc.operation.method.MethodWhile;
 
 public class Main {
@@ -67,6 +68,7 @@ public class Main {
 			env.getRootScope().loadMethod(new MethodBreak());
 			env.getRootScope().loadMethod(new MethodLog());
 			env.getRootScope().loadMethod(new MethodNull());
+			env.getRootScope().loadMethod(new MethodReturn());
 			/*test("@!ttt{$1};", env);
 			test("ttt(123, 5353,\"\", \"asdasd\" + \"sdsafd\");", env);
 			test("1+2+3+4+(5-5)", env);
@@ -92,6 +94,7 @@ public class Main {
 			testFile("./yoa/recursion.yoa", env);
 			testFile("./yoa/methods.yoa", env);
 			testFile("./yoa/if.yoa", env);
+			testFile("./yoa/return.yoa", env);
 			
 			
 		} catch (Exception e) {

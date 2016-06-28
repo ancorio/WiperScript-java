@@ -21,6 +21,7 @@ import by.igorshavlovsky.wpsc.preproc.Operation;
 import by.igorshavlovsky.wpsc.preproc.SeqOperation;
 import by.igorshavlovsky.wpsc.preproc.operation.method.BreakException;
 import by.igorshavlovsky.wpsc.preproc.operation.method.MethodOperation;
+import by.igorshavlovsky.wpsc.preproc.operation.method.ReturnException;
 import by.igorshavlovsky.wpsc.var.PtrVar;
 import by.igorshavlovsky.wpsc.var.Var;
 
@@ -150,6 +151,12 @@ public class Run {
 			return stack.get(stack.size() - 1).call();
 		} catch (BreakException e) {
 			System.err.println("Unhandeled break");
+		} catch (ReturnException e) {
+			if (stack.get(stack.size() - 1).getMethod().isBlockScope()) {
+				System.err.println("Unhandeled exception");
+			} else {
+				throw e;
+			}
 		} catch (Exception e) {
 			System.err.println("Unhandeled exception");
 		}

@@ -6,6 +6,7 @@ import java.util.List;
 import com.sun.corba.se.impl.activation.NameServiceStartThread;
 
 import by.igorshavlovsky.wpsc.exec.Call;
+import by.igorshavlovsky.wpsc.preproc.operation.method.ReturnException;
 import by.igorshavlovsky.wpsc.var.Var;
 
 public class ListOperation extends Operation {

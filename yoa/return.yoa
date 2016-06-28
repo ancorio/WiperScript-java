@@ -1,0 +1,5 @@
+@returner{
+	if ($0 == 0, {return("No params");});
+	return($1 * 10);
+};
+log(returner());

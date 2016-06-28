@@ -51,5 +51,25 @@ public class MethodOperation extends ListOperation {
 	public boolean isBlockScope() {
 		return true;
 	}
+	
+	@Override
+	public Var resolve(Call call) {
+		Var result = null;
+		for (Operation operation : operations) {
+			try {
+				result = operation.resolve(call);				
+			} catch (ReturnException e) {
+				if (!isBlockScope()) {
+					throw e;
+				}
+				if (e.getResult() != null) {
+					result = e.getResult(); 
+				}
+				break;
+			}
+		}
+		return result.unwrap();
+	}
+	
 
 }
