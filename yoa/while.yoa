@@ -1,0 +1,7 @@
+$i = 10;
+$result = "";
+while ({$i > 0}, {
+	$result = $result + i2str($i);
+	$i = $i - 1;
+});
+$result;

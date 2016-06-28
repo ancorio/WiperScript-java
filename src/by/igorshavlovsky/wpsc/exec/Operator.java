@@ -98,7 +98,7 @@ public enum Operator {
 			if (left.isDecimal() && right.isDecimal()) {
 				double lv = left.getVarType() == VarType.INTEGER ? left.asInteger().longValue() : left.asFloat().doubleValue();
 				double rv = right.getVarType() == VarType.INTEGER ? right.asInteger().longValue() : right.asFloat().doubleValue();	
-				return new BooleanVar(right.getRun(), lv > rv);
+				return new BooleanVar(right.getRun(), lv == rv);
 			}
 			if (left.getVarType() == VarType.STRING && right.getVarType() == VarType.STRING) {
 				return new BooleanVar(right.getRun(), left.asString().stringValue().equals(right.asString().stringValue()));

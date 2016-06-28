@@ -1,0 +1,14 @@
+@sum{
+	if ($0 > 0, {
+		$sum = $1;
+		$tmp = 2;
+		while ({$tmp <= $0}, {
+			$sum = $sum + $($tmp);
+			$tmp = $tmp + 1;
+		});
+		$sum;
+	}, {
+		null();
+	});
+};
+log(sum(), sum(1, 2, 3, 4), sum("1", "2", "3", "4"));

@@ -352,6 +352,8 @@ public class Preprocessor {
 				case '-':
 					if (result.length() == 0) {
 						result.append(get());
+					} else {
+						shouldBreak = true;
 					}
 					break;
 				case '.':

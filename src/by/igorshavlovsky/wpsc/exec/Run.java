@@ -19,6 +19,7 @@ import by.igorshavlovsky.wpsc.lib.std.Str2IMethod;
 import by.igorshavlovsky.wpsc.lib.std.TruncMethod;
 import by.igorshavlovsky.wpsc.preproc.Operation;
 import by.igorshavlovsky.wpsc.preproc.SeqOperation;
+import by.igorshavlovsky.wpsc.preproc.operation.method.BreakException;
 import by.igorshavlovsky.wpsc.preproc.operation.method.MethodOperation;
 import by.igorshavlovsky.wpsc.var.PtrVar;
 import by.igorshavlovsky.wpsc.var.Var;
@@ -145,7 +146,14 @@ public class Run {
 	}
 	
 	public Var call() {
-		return stack.get(stack.size() - 1).call();
+		try {
+			return stack.get(stack.size() - 1).call();
+		} catch (BreakException e) {
+			System.err.println("Unhandeled break");
+		} catch (Exception e) {
+			System.err.println("Unhandeled exception");
+		}
+		return null;
 	}
 	
 	public Call push(MethodOperation method, List <Var> params) {
